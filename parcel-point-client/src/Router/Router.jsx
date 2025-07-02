@@ -9,6 +9,8 @@ import Register from "../Pages/Authentication/Register/Register";
 import AuthenticationLayout from "../Layouts/AuthenticationLayout/AuthenticationLayout";
 import PrivateRoute from "../Routes/PrivateRoute";
 import CoveragePage from "../Pages/CoveragePage/CoveragePage";
+import PublicRoute from "../Routes/PublicRoute";
+import SendParcel from "../Pages/SendParcel/SendParcel";
 
 export const router = createBrowserRouter([
   {
@@ -21,10 +23,18 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "sendParcel",
+        element: (
+          // <PrivateRoute>
+          <SendParcel />
+          // </PrivateRoute>
+        ),
+      },
+      {
         path: "coverage",
         element: (
           // <PrivateRoute>
-            <CoveragePage />
+          <CoveragePage />
           // </PrivateRoute>
         ),
       },
@@ -32,7 +42,7 @@ export const router = createBrowserRouter([
         path: "be-a-rider",
         element: (
           // <PrivateRoute>
-            <BeARider />
+          <BeARider />
           // </PrivateRoute>
         ),
       },
@@ -53,11 +63,19 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "signin",
-        element: <Login></Login>,
+        element: (
+          <PublicRoute>
+            <Login></Login>
+          </PublicRoute>
+        ),
       },
       {
         path: "register",
-        element: <Register></Register>,
+        element: (
+          <PublicRoute>
+            <Register></Register>
+          </PublicRoute>
+        ),
       },
 
       {

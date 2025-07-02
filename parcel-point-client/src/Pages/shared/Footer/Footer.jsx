@@ -137,7 +137,7 @@ import ParcelPointLogo from "../ParcelPointLogo/ParcelPointLogo";
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white px-4 py-12 text-center space-y-8 rounded-t-3xl">
+    <footer className="bg-black text-white px-4 py-10 text-center space-y-5 rounded-t-3xl">
       
       {/* Logo + Description */}
       <div className="flex flex-col items-center space-y-4 px-4">

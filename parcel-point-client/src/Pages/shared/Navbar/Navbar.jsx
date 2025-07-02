@@ -23,14 +23,14 @@ const Navbar = () => {
       </li>
       <li>
         <NavLink
-          to="/services"
+          to="/sendParcel"
           className={({ isActive }) =>
             isActive
               ? "bg-[#CAEB66] mr-2 text-base md:text-xl rounded-lg px-3 py-1"
               : "hover:bg-[#CAEB66] mr-2 text-base md:text-xl rounded px-3 py-1"
           }
         >
-          Services
+         Send a Parcel
         </NavLink>
       </li>
       <li>
@@ -45,18 +45,7 @@ const Navbar = () => {
           Coverage
         </NavLink>
       </li>
-      <li>
-        <NavLink
-          to="/aboutUs"
-          className={({ isActive }) =>
-            isActive
-              ? "bg-[#CAEB66] mr-2 text-base md:text-xl rounded-lg px-3 py-1"
-              : "hover:bg-[#CAEB66] mr-2 text-base md:text-xl rounded px-3 py-1"
-          }
-        >
-          About Us
-        </NavLink>
-      </li>
+  
       <li>
         <NavLink
           to="/pricing"
@@ -81,11 +70,23 @@ const Navbar = () => {
           Be a Rider
         </NavLink>
       </li>
+          <li>
+        <NavLink
+          to="/aboutUs"
+          className={({ isActive }) =>
+            isActive
+              ? "bg-[#CAEB66] mr-2 text-base md:text-xl rounded-lg px-3 py-1"
+              : "hover:bg-[#CAEB66] mr-2 text-base md:text-xl rounded px-3 py-1"
+          }
+        >
+          About Us
+        </NavLink>
+      </li>
     </>
   );
 
   return (
-    <div className="navbar items-center mt-5 bg-base-100 shadow-md rounded-2xl">
+    <div className="navbar items-center  bg-base-100 shadow-md rounded-2xl top-0 sticky z-40">
       <div className="navbar-start">
         <div className="dropdown">
           <div
@@ -172,7 +173,7 @@ const Navbar = () => {
               <div className="w-10 rounded-full">
                 <img
                   alt="User avatar"
-                  src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                  src={user?.photoURL}
                 />
               </div>
             </div>

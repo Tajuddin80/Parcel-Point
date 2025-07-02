@@ -1,14 +1,19 @@
-
 import { Outlet } from "react-router";
 import Footer from "../../Pages/shared/Footer/Footer";
 import Navbar from "../../Pages/shared/Navbar/Navbar";
 
 const RootLayout = () => {
   return (
-    <div>
-      <Navbar></Navbar>
-      <Outlet></Outlet>
-      <Footer></Footer>
+    <div className="flex flex-col min-h-[150vh]">
+      <div>
+        <Navbar></Navbar>
+      </div>
+      <div className="flex-1">
+        <Outlet></Outlet>
+      </div>
+      <div>
+        <Footer></Footer>
+      </div>
     </div>
   );
 };

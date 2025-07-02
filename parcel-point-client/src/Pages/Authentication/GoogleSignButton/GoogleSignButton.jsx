@@ -9,7 +9,6 @@ const navigate = useNavigate()
     signInWithGoogle()
       .then((result) => {
         const user = result.user;
-        console.log(user);
         
         const accessToken = user?.accessToken;
         const displayName = user?.displayName;
