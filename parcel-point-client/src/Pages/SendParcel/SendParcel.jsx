@@ -6,12 +6,16 @@ import {
   CheckCircle,
   PackageSearch,
   Clock,
+  Copy,
   Mail,
   ArrowRight,
   Edit3,
+  User,
 } from "lucide-react";
 import warehouseData from "../../assets/warehouses.json";
 import useAuth from "../../hooks/useAuth";
+import axios from "axios";
+
 const MySwal = withReactContent(Swal);
 
 const SendParcel = () => {
@@ -60,9 +64,10 @@ const SendParcel = () => {
       setValue("receiverWarehouse", "");
     }
   }, [receiverRegion, setValue]);
-
   const generateTrackingId = () =>
-    "TRK-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+    "TRK-" +
+    Date.now().toString(36).toUpperCase() +
+    Math.random().toString(36).substr(2, 4).toUpperCase();
 
   const calculateCost = (data) => {
     const isSameCity = data.senderRegion === data.receiverRegion;
@@ -129,18 +134,11 @@ const SendParcel = () => {
   };
 
   const onSubmit = (data) => {
-    const trackingId = generateTrackingId();
-    const currentTime = new Date().toISOString();
-    const userEmail = user?.email || "guest@example.com";
     const costInfo = calculateCost(data);
-    const orderData = {
-      ...data,
-      trackingId,
-      createdAt: currentTime,
-      userEmail,
-      totalCost: costInfo.total,
-    };
+    const userEmail = user?.email || "guest@example.com";
+    const userName = user?.displayName || "guest";
 
+    // First modal: summary without tracking/time
     MySwal.fire({
       icon: "",
       title: (
@@ -154,10 +152,9 @@ const SendParcel = () => {
           <div className="mt-3 p-3 border border-[#B6D9D4] rounded bg-[#F0F9F8] space-y-1">
             <div className="flex justify-between">
               <span className="flex items-center gap-1 text-gray-600">
-                <PackageSearch className="w-4 h-4" />{" "}
-                <strong>Tracking ID</strong>
+                <User className="w-4 h-4" /> <strong>User Name</strong>
               </span>
-              <span className="font-medium">{trackingId}</span>
+              <span className="font-medium">{userName}</span>
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1 text-gray-600">
@@ -165,29 +162,13 @@ const SendParcel = () => {
               </span>
               <span className="font-medium">{userEmail}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="flex items-center gap-1 text-gray-600">
-                <Clock className="w-4 h-4" /> <strong>Created</strong>
-              </span>
-              <span className="font-medium">
-                {new Date(currentTime).toLocaleString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: true,
-                })}
-              </span>
-            </div>
           </div>
         </div>
       ),
       showCancelButton: true,
       confirmButtonText: (
         <span className="flex items-center gap-1">
-          <ArrowRight className="w-4 h-4" /> Proceed
+          <ArrowRight className="w-4 h-4" /> Proceed to Payment
         </span>
       ),
       cancelButtonText: (
@@ -207,11 +188,79 @@ const SendParcel = () => {
       backdrop: "rgba(0, 0, 0, 0.4)",
     }).then((result) => {
       if (result.isConfirmed) {
-        console.log("Order Data:", orderData);
-        Swal.fire("Redirecting to payment...", "", "success");
+        const trackingId = generateTrackingId();
+        const createdAt = new Date();
+        const orderData = {
+          ...data,
+          trackingId,
+          deliveryStatus : 'not_collected',
+          paymentStatus : 'unpaid',
+          createdAt: createdAt.toISOString(),
+          userEmail,
+          totalCost: costInfo.total,
+        };
+
+
+        // save to database
+axios.post('http://localhost:3000/orderData').then(res => res.data)
+
+
+        MySwal.fire({
+          html: (
+            <div className="text-left text-sm md:text-base">
+              <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                Your tracking ID:
+                <span className="text-lime-600">{trackingId}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(trackingId);
+                    Swal.fire({
+                      toast: true,
+                      position: "top-end",
+                      icon: "success",
+                      title: "Tracking ID copied!",
+                      showConfirmButton: false,
+                      timer: 1500,
+                    });
+                  }}
+                  className="text-gray-500 hover:text-lime-600"
+                  title="Copy Tracking ID"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="font-bold text-gray-700 mb-2">
+                Order placing time:{" "}
+                <span className="text-lime-600">
+                  {createdAt.toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+              </div>
+              <div className="border-t border-dashed my-2"></div>
+              <div className="text-gray-700">Full Order Summary:</div>
+              {costInfo.breakdown}
+            </div>
+          ),
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "rounded-2xl shadow-lg",
+            confirmButton:
+              "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
+          },
+        });
+
+        console.log("Final Order Data:", orderData);
       }
     });
   };
+
   return (
     <section className="w-full lg:w-[80vw] mx-auto p-4 md:p-8">
       <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
@@ -263,7 +312,7 @@ const SendParcel = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Sender */}
+          {/* Sender Details */}
           <div>
             <h3 className="font-semibold mb-2">Sender Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -312,7 +361,7 @@ const SendParcel = () => {
             </div>
           </div>
 
-          {/* Receiver */}
+          {/* Receiver Details */}
           <div>
             <h3 className="font-semibold mb-2">Receiver Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
