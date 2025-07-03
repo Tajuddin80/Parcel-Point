@@ -15,10 +15,13 @@ import {
 import warehouseData from "../../assets/warehouses.json";
 import useAuth from "../../hooks/useAuth";
 import axios from "axios";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
+
 
 const MySwal = withReactContent(Swal);
 
 const SendParcel = () => {
+  const axiosSecure = useAxiosSecure()
   const { user } = useAuth();
   const {
     register,
@@ -202,10 +205,11 @@ const SendParcel = () => {
 
 
         // save to database
-axios.post('http://localhost:3000/orderData').then(res => res.data)
+axiosSecure.post('orders', orderData).then(res =>{ if(res.data.insertedId){
 
 
-        MySwal.fire({
+// TODO: Redirect to the payment page
+ MySwal.fire({
           html: (
             <div className="text-left text-sm md:text-base">
               <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
@@ -253,10 +257,16 @@ axios.post('http://localhost:3000/orderData').then(res => res.data)
             popup: "rounded-2xl shadow-lg",
             confirmButton:
               "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
-          },
-        });
+            },
+          });
+          console.log("Final Order Data:", orderData);
+        }}
 
-        console.log("Final Order Data:", orderData);
+)
+
+
+       
+
       }
     });
   };
