@@ -17,11 +17,10 @@ import useAuth from "../../hooks/useAuth";
 import axios from "axios";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 
-
 const MySwal = withReactContent(Swal);
 
 const SendParcel = () => {
-  const axiosSecure = useAxiosSecure()
+  const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
   const {
     register,
@@ -196,77 +195,70 @@ const SendParcel = () => {
         const orderData = {
           ...data,
           trackingId,
-          deliveryStatus : 'not_collected',
-          paymentStatus : 'unpaid',
+          deliveryStatus: "not_collected",
+          paymentStatus: "unpaid",
           createdAt: createdAt.toISOString(),
           userEmail,
           totalCost: costInfo.total,
         };
 
-
         // save to database
-axiosSecure.post('orders', orderData).then(res =>{ if(res.data.insertedId){
-
-
-// TODO: Redirect to the payment page
- MySwal.fire({
-          html: (
-            <div className="text-left text-sm md:text-base">
-              <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
-                Your tracking ID:
-                <span className="text-lime-600">{trackingId}</span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(trackingId);
-                    Swal.fire({
-                      toast: true,
-                      position: "top-end",
-                      icon: "success",
-                      title: "Tracking ID copied!",
-                      showConfirmButton: false,
-                      timer: 1500,
-                    });
-                  }}
-                  className="text-gray-500 hover:text-lime-600"
-                  title="Copy Tracking ID"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="font-bold text-gray-700 mb-2">
-                Order placing time:{" "}
-                <span className="text-lime-600">
-                  {createdAt.toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: true,
-                  })}
-                </span>
-              </div>
-              <div className="border-t border-dashed my-2"></div>
-              <div className="text-gray-700">Full Order Summary:</div>
-              {costInfo.breakdown}
-            </div>
-          ),
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "rounded-2xl shadow-lg",
-            confirmButton:
-              "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
-            },
-          });
-          console.log("Final Order Data:", orderData);
-        }}
-
-)
-
-
-       
-
+        axiosSecure.post("orders", orderData).then((res) => {
+          if (res.data.insertedId) {
+            // TODO: Redirect to the payment page
+            MySwal.fire({
+              html: (
+                <div className="text-left text-sm md:text-base">
+                  <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    Your tracking ID:
+                    <span className="text-lime-600">{trackingId}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(trackingId);
+                        Swal.fire({
+                          toast: true,
+                          position: "top-end",
+                          icon: "success",
+                          title: "Tracking ID copied!",
+                          showConfirmButton: false,
+                          timer: 1500,
+                        });
+                      }}
+                      className="text-gray-500 hover:text-lime-600"
+                      title="Copy Tracking ID"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="font-bold text-gray-700 mb-2">
+                    Order placing time:{" "}
+                    <span className="text-lime-600">
+                      {createdAt.toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true,
+                      })}
+                    </span>
+                  </div>
+                  <div className="border-t border-dashed my-2"></div>
+                  <div className="text-gray-700">Full Order Summary:</div>
+                  {costInfo.breakdown}
+                </div>
+              ),
+              confirmButtonText: "OK",
+              customClass: {
+                popup: "rounded-2xl shadow-lg",
+                confirmButton:
+                  "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
+              },
+            });
+            console.log("Final Order Data:", orderData);
+          }
+        });
       }
     });
   };
@@ -348,10 +340,33 @@ axiosSecure.post('orders', orderData).then(res =>{ if(res.data.insertedId){
                 className="border rounded p-2 w-full"
               />
               <input
-                {...register("senderContact", { required: true })}
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                {...register("senderContact", {
+                  required: "Contact number is required",
+                  validate: (value) => {
+                    const mobileRegex = /^01[0-9]{9}$/; // 01 + 9 digits = 11 digits total
+                    const landlineRegex = /^0[2-9][0-9]{7,8}$/; // 0X + 7-8 digits (landline)
+
+                    if (mobileRegex.test(value)) return true;
+                    if (landlineRegex.test(value)) return true;
+
+                    return "Invalid number. Must be a valid Bangladeshi mobile (11 digits starting with 01) or landline.";
+                  },
+                })}
                 placeholder="Sender Contact No"
-                className="border rounded p-2 w-full"
+                className={`border rounded p-2 w-full ${
+                  errors.senderContact ? "border-red-500" : ""
+                }`}
               />
+
+              {errors.senderContact && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.senderContact.message}
+                </p>
+              )}
+
               <select
                 {...register("senderRegion", { required: true })}
                 className="border rounded p-2 w-full md:col-span-2"
@@ -397,10 +412,33 @@ axiosSecure.post('orders', orderData).then(res =>{ if(res.data.insertedId){
                 className="border rounded p-2 w-full"
               />
               <input
-                {...register("receiverContact", { required: true })}
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                {...register("receiverContact", {
+                  required: "Contact number is required",
+                  validate: (value) => {
+                    const mobileRegex = /^01[0-9]{9}$/; // 01 + 9 digits = 11 digits total
+                    const landlineRegex = /^0[2-9][0-9]{7,8}$/; // 0X + 7-8 digits (landline)
+
+                    if (mobileRegex.test(value)) return true;
+                    if (landlineRegex.test(value)) return true;
+
+                    return "Invalid number. Must be a valid Bangladeshi mobile (11 digits starting with 01) or landline.";
+                  },
+                })}
                 placeholder="Receiver Contact No"
-                className="border rounded p-2 w-full"
+                className={`border rounded p-2 w-full ${
+                  errors.senderContact ? "border-red-500" : ""
+                }`}
               />
+
+              {errors.senderContact && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.senderContact.message}
+                </p>
+              )}
+
               <select
                 {...register("receiverRegion", { required: true })}
                 className="border rounded p-2 w-full md:col-span-2"
