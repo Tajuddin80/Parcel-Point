@@ -33,6 +33,7 @@ const Navbar = () => {
          Send a Parcel
         </NavLink>
       </li>
+
       <li>
         <NavLink
           to="/coverage"
@@ -48,7 +49,7 @@ const Navbar = () => {
   
       <li>
         <NavLink
-          to="/pricing"
+          to="/pricingCalculator"
           className={({ isActive }) =>
             isActive
               ? "bg-[#CAEB66] mr-2 text-base md:text-xl rounded-lg px-3 py-1"

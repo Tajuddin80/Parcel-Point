@@ -11,6 +11,7 @@ import PrivateRoute from "../Routes/PrivateRoute";
 import CoveragePage from "../Pages/CoveragePage/CoveragePage";
 import PublicRoute from "../Routes/PublicRoute";
 import SendParcel from "../Pages/SendParcel/SendParcel";
+import PricingCalculator from "../Pages/PricingCalculator/PricingCalculator";
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,14 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "pricingCalculator",
+        element: (
+          // <PrivateRoute>
+          <PricingCalculator />
+          // </PrivateRoute>
+        ),
       },
       {
         path: "sendParcel",
