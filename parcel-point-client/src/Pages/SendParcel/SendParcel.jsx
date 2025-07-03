@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import warehouseData from "../../assets/warehouses.json";
 import useAuth from "../../hooks/useAuth";
-import axios from "axios";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 const MySwal = withReactContent(Swal);
@@ -30,6 +29,8 @@ const SendParcel = () => {
     reset,
     formState: { errors },
   } = useForm();
+  const [senderContactType, setSenderContactType] = useState("Mobile");
+  const [receiverContactType, setReceiverContactType] = useState("Mobile");
 
   const parcelType = watch("parcelType", "Document");
   const senderRegion = watch("senderRegion");
@@ -339,33 +340,52 @@ const SendParcel = () => {
                 placeholder="Address"
                 className="border rounded p-2 w-full"
               />
-              <input
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                {...register("senderContact", {
-                  required: "Contact number is required",
-                  validate: (value) => {
-                    const mobileRegex = /^01[0-9]{9}$/; // 01 + 9 digits = 11 digits total
-                    const landlineRegex = /^0[2-9][0-9]{7,8}$/; // 0X + 7-8 digits (landline)
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    {...register("senderContact", {
+                      required: "Contact number is required",
+                      validate: (value) => {
+                        if (!value) return "Contact number is required";
 
-                    if (mobileRegex.test(value)) return true;
-                    if (landlineRegex.test(value)) return true;
+                        if (senderContactType === "Mobile") {
+                          if (!/^01[0-9]{9}$/.test(value)) {
+                            return "Mobile must start with 01 and be 11 digits.";
+                          }
+                        } else if (senderContactType === "Tel") {
+                          if (!/^0[2-9][0-9]{7,8}$/.test(value)) {
+                            return "Tel must start with 0X and be 9-10 digits.";
+                          }
+                        }
+                        return true;
+                      },
+                    })}
+                    placeholder="Contact No"
+                    className={`border rounded p-2 w-full ${
+                      errors.senderContact ? "border-red-500" : ""
+                    }`}
+                  />
+                  {errors.senderContact && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.senderContact.message}
+                    </p>
+                  )}
+                </div>
 
-                    return "Invalid number. Must be a valid Bangladeshi mobile (11 digits starting with 01) or landline.";
-                  },
-                })}
-                placeholder="Sender Contact No"
-                className={`border rounded p-2 w-full ${
-                  errors.senderContact ? "border-red-500" : ""
-                }`}
-              />
-
-              {errors.senderContact && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.senderContact.message}
-                </p>
-              )}
+                <div>
+                  <select
+                    value={senderContactType}
+                    onChange={(e) => setSenderContactType(e.target.value)}
+                    className="border rounded p-2"
+                  >
+                    <option value="Mobile">Mobile</option>
+                    <option value="Tel">Tel</option>
+                  </select>
+                </div>
+              </div>
 
               <select
                 {...register("senderRegion", { required: true })}
@@ -411,33 +431,52 @@ const SendParcel = () => {
                 placeholder="Address"
                 className="border rounded p-2 w-full"
               />
-              <input
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                {...register("receiverContact", {
-                  required: "Contact number is required",
-                  validate: (value) => {
-                    const mobileRegex = /^01[0-9]{9}$/; // 01 + 9 digits = 11 digits total
-                    const landlineRegex = /^0[2-9][0-9]{7,8}$/; // 0X + 7-8 digits (landline)
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    {...register("receiverContact", {
+                      required: "Contact number is required",
+                      validate: (value) => {
+                        if (!value) return "Contact number is required";
 
-                    if (mobileRegex.test(value)) return true;
-                    if (landlineRegex.test(value)) return true;
+                        if (receiverContactType === "Mobile") {
+                          if (!/^01[0-9]{9}$/.test(value)) {
+                            return "Mobile must start with 01 and be 11 digits.";
+                          }
+                        } else if (receiverContactType === "Tel") {
+                          if (!/^0[2-9][0-9]{7,8}$/.test(value)) {
+                            return "Tel must start with 0X and be 9-10 digits.";
+                          }
+                        }
+                        return true;
+                      },
+                    })}
+                    placeholder="Contact No"
+                    className={`border rounded p-2 w-full ${
+                      errors.receiverContact ? "border-red-500" : ""
+                    }`}
+                  />
+                  {errors.receiverContact && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.receiverContact.message}
+                    </p>
+                  )}
+                </div>
 
-                    return "Invalid number. Must be a valid Bangladeshi mobile (11 digits starting with 01) or landline.";
-                  },
-                })}
-                placeholder="Receiver Contact No"
-                className={`border rounded p-2 w-full ${
-                  errors.senderContact ? "border-red-500" : ""
-                }`}
-              />
-
-              {errors.senderContact && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.senderContact.message}
-                </p>
-              )}
+                <div>
+                  <select
+                    value={receiverContactType}
+                    onChange={(e) => setReceiverContactType(e.target.value)}
+                    className="border rounded p-2"
+                  >
+                    <option value="Mobile">Mobile</option>
+                    <option value="Tel">Tel</option>
+                  </select>
+                </div>
+              </div>
 
               <select
                 {...register("receiverRegion", { required: true })}
