@@ -23,3 +23,33 @@
 .animate-slider {
   animation: slider 10s linear infinite;
 }
+
+
+.swal2-border-radius {
+  border-radius: 12px !important;
+}
+
+.swal2-confirm-btn {
+  background-color: #A3E635 !important;  /* Lime-400 vibe */
+  color: #03373D !important;
+  font-weight: 600 !important;
+  padding: 8px 20px !important;
+  border-radius: 6px !important;
+}
+
+.swal2-confirm-btn:hover {
+  background-color: #84CC16 !important; /* Darker lime */
+}
+
+.swal2-cancel-btn {
+  background: transparent !important;
+  border: 1px solid #B6D9D4 !important;
+  color: #555 !important;
+  font-weight: 500 !important;
+  padding: 8px 20px !important;
+  border-radius: 6px !important;
+}
+
+.swal2-cancel-btn:hover {
+  background: #F0F9F8 !important;
+}

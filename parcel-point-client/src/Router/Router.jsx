@@ -13,6 +13,16 @@ import PublicRoute from "../Routes/PublicRoute";
 import SendParcel from "../Pages/SendParcel/SendParcel";
 import PricingCalculator from "../Pages/PricingCalculator/PricingCalculator";
 
+
+// Define loader function
+const homeLoader = async () => {
+  const response = await fetch('/reviews.json'); // use absolute public path
+  if (!response.ok) {
+    throw new Error("Failed to load reviews");
+  }
+  return response.json();
+};
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -22,6 +32,7 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+        loader: homeLoader
       },
       {
         path: "pricingCalculator",
@@ -31,6 +42,7 @@ export const router = createBrowserRouter([
           // </PrivateRoute>
         ),
       },
+      
       {
         path: "sendParcel",
         element: (
