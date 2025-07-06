@@ -13,6 +13,7 @@ import PublicRoute from "../Routes/PublicRoute";
 import SendParcel from "../Pages/SendParcel/SendParcel";
 import PricingCalculator from "../Pages/PricingCalculator/PricingCalculator";
 import DashboardLayout from "../Layouts/DashboardLayout/DashboardLayout";
+import MyParcels from "../Pages/MyParcels/MyParcels";
 
 // Define loader function
 const homeLoader = async () => {
@@ -113,7 +114,8 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
     children: [{
-      
+      path: 'myParcels',
+      element: <MyParcels></MyParcels>
     }],
   },
   {

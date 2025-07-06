@@ -199,12 +199,12 @@ const SendParcel = () => {
           deliveryStatus: "not_collected",
           paymentStatus: "unpaid",
           createdAt: createdAt.toISOString(),
-          userEmail,
+          created_by: userEmail,
           totalCost: costInfo.total,
         };
 
         // save to database
-        axiosSecure.post("orders", orderData).then((res) => {
+        axiosSecure.post("/parcels", orderData).then((res) => {
           if (res.data.insertedId) {
             // TODO: Redirect to the payment page
             MySwal.fire({
