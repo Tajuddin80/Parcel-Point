@@ -12,11 +12,11 @@ import CoveragePage from "../Pages/CoveragePage/CoveragePage";
 import PublicRoute from "../Routes/PublicRoute";
 import SendParcel from "../Pages/SendParcel/SendParcel";
 import PricingCalculator from "../Pages/PricingCalculator/PricingCalculator";
-
+import DashboardLayout from "../Layouts/DashboardLayout/DashboardLayout";
 
 // Define loader function
 const homeLoader = async () => {
-  const response = await fetch('/reviews.json'); // use absolute public path
+  const response = await fetch("/reviews.json"); // use absolute public path
   if (!response.ok) {
     throw new Error("Failed to load reviews");
   }
@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
-        loader: homeLoader
+        loader: homeLoader,
       },
       {
         path: "pricingCalculator",
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
           // </PrivateRoute>
         ),
       },
-      
+
       {
         path: "sendParcel",
         element: (
@@ -104,6 +104,17 @@ export const router = createBrowserRouter([
         element: <ErrorPage />,
       },
     ],
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <PrivateRoute>
+        <DashboardLayout></DashboardLayout>
+      </PrivateRoute>
+    ),
+    children: [{
+      
+    }],
   },
   {
     path: "*",

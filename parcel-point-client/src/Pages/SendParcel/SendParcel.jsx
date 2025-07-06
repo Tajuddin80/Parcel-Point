@@ -276,6 +276,7 @@ const SendParcel = () => {
           Enter your parcel details
         </h2>
 
+        {/* PARCEL TYPE */}
         <div className="flex items-center gap-4 mb-4">
           <label className="flex items-center gap-2">
             <input
@@ -296,50 +297,110 @@ const SendParcel = () => {
           </label>
         </div>
 
+        {/* PARCEL NAME + WEIGHT */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <input
-            {...register("parcelName", { required: true })}
-            type="text"
-            placeholder="Parcel Name"
-            className="border rounded p-2 w-full"
-          />
-          {parcelType === "Not-Document" && (
+          <div>
             <input
-              {...register("parcelWeight", { required: true })}
-              type="number"
-              step="0.01"
-              placeholder="Parcel Weight (KG)"
-              className="border rounded p-2 w-full"
+              {...register("parcelName", {
+                required: "Parcel name is required",
+              })}
+              type="text"
+              placeholder="Parcel Name"
+              className={`border rounded p-2 w-full ${
+                errors.parcelName ? "border-red-500" : ""
+              }`}
             />
+            {errors.parcelName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.parcelName.message}
+              </p>
+            )}
+          </div>
+
+          {parcelType === "Not-Document" && (
+            <div>
+              <input
+                {...register("parcelWeight", {
+                  required: "Parcel weight is required",
+                })}
+                type="number"
+                step="0.01"
+                placeholder="Parcel Weight (KG)"
+                className={`border rounded p-2 w-full ${
+                  errors.parcelWeight ? "border-red-500" : ""
+                }`}
+              />
+              {errors.parcelWeight && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.parcelWeight.message}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Sender Details */}
+          {/* SENDER DETAILS */}
           <div>
             <h3 className="font-semibold mb-2">Sender Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                {...register("senderName", { required: true })}
-                placeholder="Sender Name"
-                className="border rounded p-2 w-full"
-              />
-              <select
-                {...register("senderWarehouse", { required: true })}
-                className="border rounded p-2 w-full"
-              >
-                <option value="">Select Warehouse</option>
-                {senderWarehouses.map((d, idx) => (
-                  <option key={idx} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-              <input
-                {...register("senderAddress", { required: true })}
-                placeholder="Address"
-                className="border rounded p-2 w-full"
-              />
+              <div>
+                <input
+                  {...register("senderName", {
+                    required: "Sender name is required",
+                  })}
+                  placeholder="Sender Name"
+                  className={`border rounded p-2 w-full ${
+                    errors.senderName ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.senderName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderName.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <select
+                  {...register("senderWarehouse", {
+                    required: "Select sender warehouse",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.senderWarehouse ? "border-red-500" : ""
+                  }`}
+                >
+                  <option value="">Select Warehouse</option>
+                  {senderWarehouses.map((d, idx) => (
+                    <option key={idx} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {errors.senderWarehouse && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderWarehouse.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <input
+                  {...register("senderAddress", {
+                    required: "Sender address is required",
+                  })}
+                  placeholder="Address"
+                  className={`border rounded p-2 w-full ${
+                    errors.senderAddress ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.senderAddress && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderAddress.message}
+                  </p>
+                )}
+              </div>
+
               <div className="flex gap-2 items-start">
                 <div className="flex-1">
                   <input
@@ -347,18 +408,19 @@ const SendParcel = () => {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     {...register("senderContact", {
-                      required: "Contact number is required",
+                      required: "Sender contact is required",
                       validate: (value) => {
-                        if (!value) return "Contact number is required";
-
+                        if (!value) return "Sender contact is required";
                         if (senderContactType === "Mobile") {
-                          if (!/^01[0-9]{9}$/.test(value)) {
-                            return "Mobile must start with 01 and be 11 digits.";
-                          }
+                          return (
+                            /^01[0-9]{9}$/.test(value) ||
+                            "Mobile must start with 01 and be 11 digits"
+                          );
                         } else if (senderContactType === "Tel") {
-                          if (!/^0[2-9][0-9]{7,8}$/.test(value)) {
-                            return "Tel must start with 0X and be 9-10 digits.";
-                          }
+                          return (
+                            /^0[2-9][0-9]{7,8}$/.test(value) ||
+                            "Tel must start with 0X and be 9-10 digits"
+                          );
                         }
                         return true;
                       },
@@ -387,50 +449,109 @@ const SendParcel = () => {
                 </div>
               </div>
 
-              <select
-                {...register("senderRegion", { required: true })}
-                className="border rounded p-2 w-full md:col-span-2"
-              >
-                <option value="">Select your region</option>
-                {uniqueRegions.map((r, idx) => (
-                  <option key={idx} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                {...register("pickupInstruction", { required: true })}
-                placeholder="Pickup Instruction"
-                className="border rounded p-2 w-full md:col-span-2"
-              />
+              <div className="md:col-span-2">
+                <select
+                  {...register("senderRegion", {
+                    required: "Select sender region",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.senderRegion ? "border-red-500" : ""
+                  }`}
+                >
+                  <option value="">Select your region</option>
+                  {uniqueRegions.map((r, idx) => (
+                    <option key={idx} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                {errors.senderRegion && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderRegion.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <textarea
+                  {...register("pickupInstruction", {
+                    required: "Pickup instruction is required",
+                  })}
+                  placeholder="Pickup Instruction"
+                  className={`border rounded p-2 w-full ${
+                    errors.pickupInstruction ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.pickupInstruction && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.pickupInstruction.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Receiver Details */}
+          {/* RECEIVER DETAILS */}
           <div>
             <h3 className="font-semibold mb-2">Receiver Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                {...register("receiverName", { required: true })}
-                placeholder="Receiver Name"
-                className="border rounded p-2 w-full"
-              />
-              <select
-                {...register("receiverWarehouse", { required: true })}
-                className="border rounded p-2 w-full"
-              >
-                <option value="">Select Warehouse</option>
-                {receiverWarehouses.map((d, idx) => (
-                  <option key={idx} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-              <input
-                {...register("receiverAddress", { required: true })}
-                placeholder="Address"
-                className="border rounded p-2 w-full"
-              />
+              <div>
+                <input
+                  {...register("receiverName", {
+                    required: "Receiver name is required",
+                  })}
+                  placeholder="Receiver Name"
+                  className={`border rounded p-2 w-full ${
+                    errors.receiverName ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.receiverName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverName.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <select
+                  {...register("receiverWarehouse", {
+                    required: "Select receiver warehouse",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.receiverWarehouse ? "border-red-500" : ""
+                  }`}
+                >
+                  <option value="">Select Warehouse</option>
+                  {receiverWarehouses.map((d, idx) => (
+                    <option key={idx} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {errors.receiverWarehouse && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverWarehouse.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <input
+                  {...register("receiverAddress", {
+                    required: "Receiver address is required",
+                  })}
+                  placeholder="Address"
+                  className={`border rounded p-2 w-full ${
+                    errors.receiverAddress ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.receiverAddress && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverAddress.message}
+                  </p>
+                )}
+              </div>
+
               <div className="flex gap-2 items-start">
                 <div className="flex-1">
                   <input
@@ -438,18 +559,19 @@ const SendParcel = () => {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     {...register("receiverContact", {
-                      required: "Contact number is required",
+                      required: "Receiver contact is required",
                       validate: (value) => {
-                        if (!value) return "Contact number is required";
-
+                        if (!value) return "Receiver contact is required";
                         if (receiverContactType === "Mobile") {
-                          if (!/^01[0-9]{9}$/.test(value)) {
-                            return "Mobile must start with 01 and be 11 digits.";
-                          }
+                          return (
+                            /^01[0-9]{9}$/.test(value) ||
+                            "Mobile must start with 01 and be 11 digits"
+                          );
                         } else if (receiverContactType === "Tel") {
-                          if (!/^0[2-9][0-9]{7,8}$/.test(value)) {
-                            return "Tel must start with 0X and be 9-10 digits.";
-                          }
+                          return (
+                            /^0[2-9][0-9]{7,8}$/.test(value) ||
+                            "Tel must start with 0X and be 9-10 digits"
+                          );
                         }
                         return true;
                       },
@@ -478,22 +600,45 @@ const SendParcel = () => {
                 </div>
               </div>
 
-              <select
-                {...register("receiverRegion", { required: true })}
-                className="border rounded p-2 w-full md:col-span-2"
-              >
-                <option value="">Select your region</option>
-                {uniqueRegions.map((r, idx) => (
-                  <option key={idx} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                {...register("deliveryInstruction", { required: true })}
-                placeholder="Delivery Instruction"
-                className="border rounded p-2 w-full md:col-span-2"
-              />
+              <div className="md:col-span-2">
+                <select
+                  {...register("receiverRegion", {
+                    required: "Select receiver region",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.receiverRegion ? "border-red-500" : ""
+                  }`}
+                >
+                  <option value="">Select your region</option>
+                  {uniqueRegions.map((r, idx) => (
+                    <option key={idx} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                {errors.receiverRegion && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverRegion.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <textarea
+                  {...register("deliveryInstruction", {
+                    required: "Delivery instruction is required",
+                  })}
+                  placeholder="Delivery Instruction"
+                  className={`border rounded p-2 w-full ${
+                    errors.deliveryInstruction ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.deliveryInstruction && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.deliveryInstruction.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

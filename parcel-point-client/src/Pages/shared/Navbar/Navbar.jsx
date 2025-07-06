@@ -46,7 +46,20 @@ const Navbar = () => {
           Coverage
         </NavLink>
       </li>
-  
+  {
+    user &&     <li>
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            isActive
+              ? "bg-[#CAEB66] mr-2 text-base md:text-xl rounded-lg px-3 py-1"
+              : "hover:bg-[#CAEB66] mr-2 text-base md:text-xl rounded px-3 py-1"
+          }
+        >
+        Dashboard
+        </NavLink>
+      </li>
+  }
       <li>
         <NavLink
           to="/pricingCalculator"
