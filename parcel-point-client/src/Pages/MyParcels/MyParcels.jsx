@@ -7,13 +7,19 @@ import Swal from "sweetalert2";
 const MyParcels = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
-  const { data: parcels = [] } = useQuery({
+
+
+// use tanstack query 
+  const { data: parcels = [], refetch } = useQuery({
     queryKey: ["my-parcels", user?.email],
     queryFn: async () => {
       const res = await axiosSecure.get(`/parcels?email=${user?.email}`);
       return res.data;
     },
   });
+
+
+
   const handleView = (parcel) => {
     console.log("View details for:", parcel);
     // You can navigate or open modal
@@ -38,8 +44,15 @@ const MyParcels = () => {
           .delete(`/parcels/${parcel._id}`)
           .then((res) => {
             if (res.data.deletedCount) {
-              Swal.fire("Deleted!", "The parcel has been deleted.", "success");
+              Swal.fire({
+                title: "Deleted!",
+                text: "The parcel has been deleted.",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false,
+              });
             }
+            refetch()
           })
           .catch(() => {
             Swal.fire("Error!", "Failed to delete the parcel.", "error");

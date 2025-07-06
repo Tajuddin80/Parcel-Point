@@ -1,34 +1,36 @@
 import React from "react";
 import useAuth from "../../../hooks/useAuth";
-import { useNavigate } from "react-router";
-
+import { useLocation, useNavigate } from "react-router";
 const GoogleSignButton = () => {
-  const { signInWithGoogle } = useAuth();
-const navigate = useNavigate()
-  const handleGoogleSignIn = () => {
-    signInWithGoogle()
-      .then((result) => {
-        const user = result.user;
-        
-        const accessToken = user?.accessToken;
-        const displayName = user?.displayName;
-        const photoURL = user?.photoURL;
-        const email = user?.email;
+  const { signInWithGoogle, loading } = useAuth();
 
-navigate('/')
-        
-      })
-      .catch((error) => {
-        console.error("Google sign-in error:", error.message);
-      });
-  };
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const from = location.state?.from || "/";
+
+const handleGoogleSignIn = () => {
+  if (loading) return; // prevent double trigger
+
+  signInWithGoogle()
+    .then((result) => {
+      console.log(result.user);
+      navigate(from, { replace: true });
+    })
+    .catch((error) => {
+      console.error("Google sign-in error:", error.message);
+      alert("Google sign-in failed: " + error.message); // Or use a toast/Swal
+    });
+};
+
 
   return (
-    <button
-      onClick={handleGoogleSignIn}
-      type="button"
-      className="w-full flex btn cursor-pointer items-center justify-center border border-gray-300 rounded-md py-2 mb-4 hover:shadow"
-    >
+   <button
+  onClick={handleGoogleSignIn}
+  type="button"
+  disabled={loading}
+  className="w-full flex btn cursor-pointer items-center justify-center border border-gray-300 rounded-md py-2 mb-4 hover:shadow"
+>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 32 32"

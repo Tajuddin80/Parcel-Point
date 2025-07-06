@@ -9,7 +9,7 @@ import Register from "../Pages/Authentication/Register/Register";
 import AuthenticationLayout from "../Layouts/AuthenticationLayout/AuthenticationLayout";
 import PrivateRoute from "../Routes/PrivateRoute";
 import CoveragePage from "../Pages/CoveragePage/CoveragePage";
-import PublicRoute from "../Routes/PublicRoute";
+// import PublicRoute from "../Routes/PublicRoute";
 import SendParcel from "../Pages/SendParcel/SendParcel";
 import PricingCalculator from "../Pages/PricingCalculator/PricingCalculator";
 import DashboardLayout from "../Layouts/DashboardLayout/DashboardLayout";
@@ -47,9 +47,9 @@ export const router = createBrowserRouter([
       {
         path: "sendParcel",
         element: (
-          // <PrivateRoute>
+          <PrivateRoute>
           <SendParcel />
-          // </PrivateRoute>
+          </PrivateRoute>
         ),
       },
       {
@@ -86,17 +86,17 @@ export const router = createBrowserRouter([
       {
         path: "signin",
         element: (
-          <PublicRoute>
+          // <PublicRoute>
             <Login></Login>
-          </PublicRoute>
+          // </PublicRoute>
         ),
       },
       {
         path: "register",
         element: (
-          <PublicRoute>
+          // <PublicRoute>
             <Register></Register>
-          </PublicRoute>
+          // </PublicRoute>
         ),
       },
 
