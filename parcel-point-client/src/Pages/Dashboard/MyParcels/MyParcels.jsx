@@ -1,14 +1,15 @@
 import React from "react";
-import useAuth from "../../hooks/useAuth";
+import useAuth from "../../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import useAxiosSecure from "../../hooks/useAxiosSecure";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router";
 
 const MyParcels = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
 
-
+const navigate = useNavigate()
 // use tanstack query 
   const { data: parcels = [], refetch } = useQuery({
     queryKey: ["my-parcels", user?.email],
@@ -26,6 +27,10 @@ const MyParcels = () => {
   };
 
   const handlePay = (parcel) => {
+
+    navigate(`/dashboard/payment/${parcel._id}`)
+
+
     console.log("Pay for:", parcel);
     // Payment logic
   };

@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const { MongoClient,ObjectId, ServerApiVersion } = require("mongodb");
+const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(process.env.MONGODB_URI, {
@@ -55,22 +55,24 @@ async function run() {
       }
     });
 
-// delete parcel
-app.delete('/parcels/:id', async (req, res) => {
-  const parcelId = req.params.id;
+    // delete parcel
+    app.delete("/parcels/:id", async (req, res) => {
+      const parcelId = req.params.id;
 
-  try {
-    const result = await parcelsCollection.deleteOne({ _id: new ObjectId(parcelId) });
-    if (result.deletedCount > 0) {
-      res.send(result);
-    } else {
-      res.status(404).send({ message: "failed to delete parcel" });
-    }
-  } catch (error) {
-    console.error('Error deleting parcel:', error);
-    res.status(500).send({ message: "failed to delete parcel" });
-  }
-});
+      try {
+        const result = await parcelsCollection.deleteOne({
+          _id: new ObjectId(parcelId),
+        });
+        if (result.deletedCount > 0) {
+          res.send(result);
+        } else {
+          res.status(404).send({ message: "failed to delete parcel" });
+        }
+      } catch (error) {
+        console.error("Error deleting parcel:", error);
+        res.status(500).send({ message: "failed to delete parcel" });
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

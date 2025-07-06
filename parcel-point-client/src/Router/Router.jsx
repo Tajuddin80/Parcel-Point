@@ -13,7 +13,8 @@ import CoveragePage from "../Pages/CoveragePage/CoveragePage";
 import SendParcel from "../Pages/SendParcel/SendParcel";
 import PricingCalculator from "../Pages/PricingCalculator/PricingCalculator";
 import DashboardLayout from "../Layouts/DashboardLayout/DashboardLayout";
-import MyParcels from "../Pages/MyParcels/MyParcels";
+import MyParcels from "../Pages/Dashboard/MyParcels/MyParcels";
+import Payment from "../Pages/Dashboard/Payment/Payment";
 
 // Define loader function
 const homeLoader = async () => {
@@ -116,6 +117,10 @@ export const router = createBrowserRouter([
     children: [{
       path: 'myParcels',
       element: <MyParcels></MyParcels>
+    },
+  {
+      path: 'payment/:id',
+      element: <Payment></Payment>
     }],
   },
   {
