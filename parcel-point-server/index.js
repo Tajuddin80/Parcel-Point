@@ -13,9 +13,9 @@ const client = new MongoClient(process.env.MONGODB_URI, {
     strict: true,
     deprecationErrors: true,
   },
-  tls: true,
-  serverSelectionTimeoutMS: 3000,
-  autoSelectFamily: false,
+  // tls: true,
+  // serverSelectionTimeoutMS: 3000,
+  // autoSelectFamily: false,
 });
 app.use(cors());
 app.use(express.json());
@@ -39,6 +39,7 @@ async function run() {
         res.status(500).send({ message: "error happend" });
       }
     });
+
     // get parcels from db
     app.get("/parcels", async (req, res) => {
       try {
@@ -71,6 +72,26 @@ async function run() {
       } catch (error) {
         console.error("Error deleting parcel:", error);
         res.status(500).send({ message: "failed to delete parcel" });
+      }
+    });
+
+    // Assuming `db` is your connected database instance
+    app.get("/parcels/:id", async (req, res) => {
+      const parcelId = req.params.id;
+
+      try {
+        const result = await parcelsCollection.findOne({
+          _id: new ObjectId(parcelId),
+        });
+
+        if (result) {
+          res.send(result);
+        } else {
+          res.status(404).send({ message: "Parcel not found" });
+        }
+      } catch (error) {
+        console.error("Error fetching parcel:", error);
+        res.status(500).send({ message: "Failed to fetch parcel" });
       }
     });
 

@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
         path: "sendParcel",
         element: (
           <PrivateRoute>
-          <SendParcel />
+            <SendParcel />
           </PrivateRoute>
         ),
       },
@@ -88,7 +88,7 @@ export const router = createBrowserRouter([
         path: "signin",
         element: (
           // <PublicRoute>
-            <Login></Login>
+          <Login></Login>
           // </PublicRoute>
         ),
       },
@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
         path: "register",
         element: (
           // <PublicRoute>
-            <Register></Register>
+          <Register></Register>
           // </PublicRoute>
         ),
       },
@@ -114,14 +114,16 @@ export const router = createBrowserRouter([
         <DashboardLayout></DashboardLayout>
       </PrivateRoute>
     ),
-    children: [{
-      path: 'myParcels',
-      element: <MyParcels></MyParcels>
-    },
-  {
-      path: 'payment/:id',
-      element: <Payment></Payment>
-    }],
+    children: [
+      {
+        index: true,
+        element: <MyParcels></MyParcels>,
+      },
+      {
+        path: "payment/:parcelId",
+        element: <Payment></Payment>,
+      },
+    ],
   },
   {
     path: "*",

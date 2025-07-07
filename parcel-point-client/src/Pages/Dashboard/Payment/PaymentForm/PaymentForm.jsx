@@ -1,12 +1,35 @@
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { motion } from "framer-motion";
+import { useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 
 const PaymentForm = () => {
-  const stripe = useStripe();
-  const elements = useElements();
   const [message, setMessage] = useState(null);
   const [isError, setIsError] = useState(false);
+  const axiosSecure = useAxiosSecure();
+  const stripe = useStripe();
+  const elements = useElements();
+  const { parcelId } = useParams();
+  
+  //  using tanstack query to fetch data
+  const { isPending, data: parcelInfo = {} } = useQuery({
+    queryKey: ["parcels", parcelId],
+    queryFn: async () => {
+      const res = await axiosSecure.get(`/parcels/${parcelId}`);
+      return res.data;
+    },
+  });
+  
+  // console.log(parcelInfo);
+const amount = parcelInfo.totalCost
+
+
+  if (isPending) {
+    return <span className="loading loading-spinner loading-xl"></span>;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -34,7 +57,9 @@ const PaymentForm = () => {
       setIsError(true);
       setMessage(error.message);
     } else {
+
       console.log("PaymentMethod:", paymentMethod);
+      
       setIsError(false);
       setMessage("Payment method created successfully!");
       // Here, confirm payment intent or proceed further
@@ -82,7 +107,7 @@ const PaymentForm = () => {
           disabled={!stripe}
           className="w-full bg-brand btn btn-primary text-white py-2 rounded-lg shadow-md hover:bg-brand-dark transition duration-300"
         >
-          Pay For Parcel
+          Pay ৳{amount}
         </button>
       </form>
     </motion.div>
