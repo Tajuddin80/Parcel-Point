@@ -31,7 +31,7 @@ const navigate = useNavigate()
     navigate(`/dashboard/payment/${parcel._id}`)
 
 
-    console.log("Pay for:", parcel);
+    // console.log("Pay for:", parcel);
     // Payment logic
   };
 

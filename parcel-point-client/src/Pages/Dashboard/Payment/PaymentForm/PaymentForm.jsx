@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 import useAuth from "../../../../hooks/useAuth";
 import Swal from "sweetalert2";
+import Loader from "../../../shared/Loader/Loader";
 
 const PaymentForm = () => {
   const navigate = useNavigate();
@@ -28,12 +29,9 @@ const PaymentForm = () => {
 
   // Show loading spinner while data is fetching
   if (isPending) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-xl"></span>
-      </div>
-    );
+    return <Loader></Loader>;
   }
+  // console.log(parcelInfo);
 
   const amount = parcelInfo?.totalCost || 0;
   const amountInCents = amount * 100; // convert in cent
@@ -59,7 +57,7 @@ const PaymentForm = () => {
       setIsError(true);
       setMessage(error.message);
     } else {
-      console.log("PaymentMethod:", paymentMethod);
+      // console.log("PaymentMethod:", paymentMethod);
       setIsError(false);
       setMessage("Payment method created successfully!");
 
@@ -92,10 +90,12 @@ const PaymentForm = () => {
           setIsError(false);
           setMessage("Payment succeeded!");
           // console.log("Payment succeeded!");
-          console.log(result);
+
+          // console.log(result);
           const transactionId = result.paymentIntent.id;
           //  step 4:
           const paymentDoc = {
+            parcelName: parcelInfo?.parcelName,
             parcelId,
             userName: user?.displayName,
             email: user?.email,

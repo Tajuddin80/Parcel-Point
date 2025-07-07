@@ -101,6 +101,7 @@ async function run() {
     app.post("/payments", async (req, res) => {
       const payment = req.body;
       const {
+        parcelName,
         parcelId,
         transactionId,
         paymentMethod,
@@ -113,6 +114,7 @@ async function run() {
       try {
         // 1. Insert into payments collection
         const paymentDoc = {
+          parcelName,
           parcelId: new ObjectId(parcelId),
           userName,
           email,
