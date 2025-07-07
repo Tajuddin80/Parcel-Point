@@ -1,19 +1,23 @@
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { motion } from "framer-motion";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../../hooks/useAxiosSecure";
+import useAuth from "../../../../hooks/useAuth";
+import Swal from "sweetalert2";
 
 const PaymentForm = () => {
+  const navigate = useNavigate();
   const [message, setMessage] = useState(null);
   const [isError, setIsError] = useState(false);
   const axiosSecure = useAxiosSecure();
   const stripe = useStripe();
   const elements = useElements();
   const { parcelId } = useParams();
-  
-  //  using tanstack query to fetch data
+  const { user } = useAuth();
+
+  // Use TanStack query to fetch parcel info
   const { isPending, data: parcelInfo = {} } = useQuery({
     queryKey: ["parcels", parcelId],
     queryFn: async () => {
@@ -21,32 +25,30 @@ const PaymentForm = () => {
       return res.data;
     },
   });
-  
-  // console.log(parcelInfo);
-const amount = parcelInfo.totalCost
 
-
+  // Show loading spinner while data is fetching
   if (isPending) {
-    return <span className="loading loading-spinner loading-xl"></span>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span className="loading loading-spinner loading-xl"></span>
+      </div>
+    );
   }
+
+  const amount = parcelInfo?.totalCost || 0;
+  const amountInCents = amount * 100; // convert in cent
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
-      // Stripe.js has not loaded yet. Make sure to disable
-      // form submission until Stripe.js has loaded.
       return;
     }
 
-    // Get a reference to a mounted CardElement. Elements knows how
-    // to find your CardElement because there can only ever be one of
-    // each type of element.
     const card = elements.getElement(CardElement);
+    if (!card) return;
 
-    if (card == null || !card) {
-      return;
-    }
+    //  step 1: validate te card
     const { error, paymentMethod } = await stripe.createPaymentMethod({
       type: "card",
       card,
@@ -57,12 +59,68 @@ const amount = parcelInfo.totalCost
       setIsError(true);
       setMessage(error.message);
     } else {
-
       console.log("PaymentMethod:", paymentMethod);
-      
       setIsError(false);
       setMessage("Payment method created successfully!");
-      // Here, confirm payment intent or proceed further
+
+      //  step: 2 create payment intent
+      const res = await axiosSecure.post("/create-payment-intent", {
+        amountInCents,
+        parcelId,
+      });
+
+      // console.log('res from intent :', res);
+
+      const clientSecret = res?.data?.clientSecret;
+
+      // step 3: confirm payment
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+          billing_details: {
+            name: user?.displayName,
+            email: user?.email,
+          },
+        },
+      });
+
+      if (result.error) {
+        setIsError(true);
+        setMessage(result.error.message);
+      } else {
+        if (result.paymentIntent.status === "succeeded") {
+          setIsError(false);
+          setMessage("Payment succeeded!");
+          // console.log("Payment succeeded!");
+          console.log(result);
+          const transactionId = result.paymentIntent.id;
+          //  step 4:
+          const paymentDoc = {
+            parcelId,
+            userName: user?.displayName,
+            email: user?.email,
+            amount: amount,
+            paymentMethod: result.paymentIntent.payment_method_types[0],
+            cardType: paymentMethod.card.brand,
+            transactionId,
+          };
+
+          const paymentRes = await axiosSecure.post("/payments", paymentDoc);
+          if (paymentRes.data.insertedId) {
+            Swal.fire({
+              title: "Payment Successful!",
+              html: `Transaction ID: <strong>${transactionId}</strong>`,
+              icon: "success",
+              confirmButtonText: "Go to My Parcels",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                navigate("/dashboard/myParcels");
+              }
+            });
+          }
+        }
+      }
+      // TODO: Handle payment intent confirmation if needed
     }
   };
 
@@ -104,7 +162,7 @@ const amount = parcelInfo.totalCost
         </div>
         <button
           type="submit"
-          disabled={!stripe}
+          disabled={!stripe || amount === 0}
           className="w-full bg-brand btn btn-primary text-white py-2 rounded-lg shadow-md hover:bg-brand-dark transition duration-300"
         >
           Pay ৳{amount}

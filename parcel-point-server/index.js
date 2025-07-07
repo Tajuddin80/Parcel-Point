@@ -3,10 +3,9 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 3000;
-
 const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
+const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(process.env.MONGODB_URI, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -27,6 +26,9 @@ async function run() {
 
     // all collections
     const parcelsCollection = client.db("parcelPoint").collection("allParcels");
+    const paymentsCollection = client
+      .db("parcelPoint")
+      .collection("allPayments");
 
     // add parcels to the db
     app.post("/parcels", async (req, res) => {
@@ -92,6 +94,86 @@ async function run() {
       } catch (error) {
         console.error("Error fetching parcel:", error);
         res.status(500).send({ message: "Failed to fetch parcel" });
+      }
+    });
+
+    // save payment in db
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const {
+        parcelId,
+        transactionId,
+        paymentMethod,
+        email,
+        userName,
+        amount,
+        cardType
+      } = payment;
+
+      try {
+        // 1. Insert into payments collection
+        const paymentDoc = {
+          parcelId: new ObjectId(parcelId),
+          userName,
+          email,
+          amount,
+          paymentMethod,
+          cardType,
+          transactionId,
+          paid_at_string: new Date().toISOString(),
+          paid_at: new Date(),
+        };
+
+        const paymentResult = await paymentsCollection.insertOne(paymentDoc);
+
+        // 2. Update the parcel's paymentStatus to 'paid'
+        const parcelUpdateResult = await parcelsCollection.updateOne(
+          { _id: new ObjectId(parcelId) },
+          { $set: { paymentStatus: "paid" } }
+        );
+
+        res.send({
+          success: true,
+          insertedId: paymentResult.insertedId,
+          modifiedParcel: parcelUpdateResult.modifiedCount,
+        });
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        res.status(500).send({ message: "Payment processing failed" });
+      }
+    });
+
+    // VVI:   write prompt in stripe.js AI : i want to create custom card payment system using react and node on the server
+
+    // card payment intent related
+    app.post("/create-payment-intent", async (req, res) => {
+      const amountInCents = req.body.amountInCents;
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amountInCents, // Amount in cents
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        res.json({ clientSecret: paymentIntent.client_secret });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get("/payments", async (req, res) => {
+      const userEmail = req.query.email;
+
+      try {
+        const query = userEmail ? { email: userEmail } : {};
+        const history = await paymentsCollection
+          .find(query)
+          .sort({ paid_at: -1 }) // Latest first
+          .toArray();
+
+        res.send(history);
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+        res.status(500).send({ message: "Failed to load payment history" });
       }
     });
 
