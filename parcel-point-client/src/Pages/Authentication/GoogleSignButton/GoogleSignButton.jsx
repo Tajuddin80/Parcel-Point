@@ -18,6 +18,7 @@ const GoogleSignButton = () => {
         const user = result.user;
 
         // Prepare user info for backend
+        // Prepare user info for backend
         const userInfo = {
           email: user.email,
           role: "user",
