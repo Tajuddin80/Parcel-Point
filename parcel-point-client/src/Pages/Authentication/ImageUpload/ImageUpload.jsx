@@ -3,7 +3,11 @@ import defaultProfile from "../../../assets/default.png";
 import Swal from "sweetalert2";
 
 const ImageUpload = forwardRef((props, ref) => {
+  
   const [preview, setPreview] = useState(defaultProfile);
+
+
+  // upload file
   const [file, setFile] = useState(null);
 
   useImperativeHandle(ref, () => ({

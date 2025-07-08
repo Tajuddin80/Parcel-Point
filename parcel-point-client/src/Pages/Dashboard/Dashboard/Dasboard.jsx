@@ -40,42 +40,7 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* User Info Card */}
-      <motion.div
-        className="relative bg-gradient-to-br from-primary/10 to-secondary/10 p-8 rounded-3xl shadow-xl w-full max-w-xl text-center space-y-6 border border-base-300"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ delay: 0.3 }}
-      >
-        <div className="relative w-32 h-32 mx-auto">
-          <img
-            src={user?.photoURL}
-            alt="User Profile"
-            className="w-full h-full object-cover rounded-full border-4 border-primary shadow-lg"
-          />
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-bold text-base-content">{user?.displayName}</h2>
-          <p className="text-base text-base-content mt-1">📧 {user?.email}</p>
-          <div className="mt-3">
-            <span className="inline-block bg-primary text-white px-4 py-1 rounded-full text-sm shadow">
-              Role: {user?.role || "Customer"}
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <Link
-            to="/update-profile"
-            className="inline-block mt-4 px-5 py-2 text-sm font-medium text-white bg-secondary rounded-full hover:bg-secondary-focus transition duration-200"
-          >
-            Update Profile
-          </Link>
-        </div>
-      </motion.div>
-
+  
       {/* Overview Text */}
       <motion.div
         className="rounded-xl text-center space-y-6 w-full max-w-3xl"

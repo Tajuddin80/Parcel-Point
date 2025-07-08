@@ -260,7 +260,7 @@ const SendParcel = () => {
           created_by: userEmail,
           totalCost: costInfo.total,
         };
-console.log(orderData);
+        console.log(orderData);
 
         axiosSecure.post("/parcels", orderData).then((res) => {
           if (res.data.insertedId) {
@@ -328,7 +328,9 @@ console.log(orderData);
       <div className="border-b mb-6"></div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <h2 className="text-xl font-semibold mb-4">Enter your parcel details</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Enter your parcel details
+        </h2>
 
         {/* PARCEL TYPE */}
         <div className="flex items-center gap-4 mb-4">
@@ -365,7 +367,9 @@ console.log(orderData);
               }`}
             />
             {errors.parcelName && (
-              <p className="text-red-500 text-sm mt-1">{errors.parcelName.message}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {errors.parcelName.message}
+              </p>
             )}
           </div>
 
@@ -384,7 +388,9 @@ console.log(orderData);
                 }`}
               />
               {errors.parcelWeight && (
-                <p className="text-red-500 text-sm mt-1">{errors.parcelWeight.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.parcelWeight.message}
+                </p>
               )}
             </div>
           )}
@@ -406,7 +412,9 @@ console.log(orderData);
                   }`}
                 />
                 {errors.senderName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.senderName.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderName.message}
+                  </p>
                 )}
               </div>
 
@@ -428,7 +436,9 @@ console.log(orderData);
                   ))}
                 </select>
                 {errors.senderRegion && (
-                  <p className="text-red-500 text-sm mt-1">{errors.senderRegion.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderRegion.message}
+                  </p>
                 )}
               </div>
 
@@ -451,7 +461,9 @@ console.log(orderData);
                   ))}
                 </select>
                 {errors.senderDistrict && (
-                  <p className="text-red-500 text-sm mt-1">{errors.senderDistrict.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderDistrict.message}
+                  </p>
                 )}
               </div>
 
@@ -474,7 +486,9 @@ console.log(orderData);
                   ))}
                 </select>
                 {errors.senderWarehouse && (
-                  <p className="text-red-500 text-sm mt-1">{errors.senderWarehouse.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderWarehouse.message}
+                  </p>
                 )}
               </div>
 
@@ -489,7 +503,9 @@ console.log(orderData);
                   }`}
                 />
                 {errors.senderAddress && (
-                  <p className="text-red-500 text-sm mt-1">{errors.senderAddress.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.senderAddress.message}
+                  </p>
                 )}
               </div>
 
@@ -524,7 +540,9 @@ console.log(orderData);
                     }`}
                   />
                   {errors.senderContact && (
-                    <p className="text-red-500 text-sm mt-1">{errors.senderContact.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.senderContact.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -538,9 +556,9 @@ console.log(orderData);
                   </select>
                 </div>
               </div>
-               <div className="md:col-span-2">
+              <div className="md:col-span-2">
                 <textarea
-                  {...register("pickupInstruction", {
+                  {...register("senderPickupInstruction", {
                     required: "Pickup instruction is required",
                   })}
                   placeholder="Pickup Instruction"
@@ -553,7 +571,7 @@ console.log(orderData);
                     {errors.pickupInstruction.message}
                   </p>
                 )}
-              </div>   
+              </div>
             </div>
           </div>
 
@@ -572,7 +590,9 @@ console.log(orderData);
                   }`}
                 />
                 {errors.receiverName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.receiverName.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverName.message}
+                  </p>
                 )}
               </div>
 
@@ -594,7 +614,9 @@ console.log(orderData);
                   ))}
                 </select>
                 {errors.receiverRegion && (
-                  <p className="text-red-500 text-sm mt-1">{errors.receiverRegion.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverRegion.message}
+                  </p>
                 )}
               </div>
 
@@ -617,7 +639,9 @@ console.log(orderData);
                   ))}
                 </select>
                 {errors.receiverDistrict && (
-                  <p className="text-red-500 text-sm mt-1">{errors.receiverDistrict.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverDistrict.message}
+                  </p>
                 )}
               </div>
 
@@ -640,7 +664,9 @@ console.log(orderData);
                   ))}
                 </select>
                 {errors.receiverWarehouse && (
-                  <p className="text-red-500 text-sm mt-1">{errors.receiverWarehouse.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverWarehouse.message}
+                  </p>
                 )}
               </div>
 
@@ -655,7 +681,9 @@ console.log(orderData);
                   }`}
                 />
                 {errors.receiverAddress && (
-                  <p className="text-red-500 text-sm mt-1">{errors.receiverAddress.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.receiverAddress.message}
+                  </p>
                 )}
               </div>
 
@@ -690,7 +718,9 @@ console.log(orderData);
                     }`}
                   />
                   {errors.receiverContact && (
-                    <p className="text-red-500 text-sm mt-1">{errors.receiverContact.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.receiverContact.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -705,9 +735,9 @@ console.log(orderData);
                 </div>
               </div>
 
-   <div className="md:col-span-2">
+              <div className="md:col-span-2">
                 <textarea
-                  {...register("deliveryInstruction", {
+                  {...register("receiverDeliveryInstruction", {
                     required: "Delivery instruction is required",
                   })}
                   placeholder="Delivery Instruction"
