@@ -30,13 +30,12 @@ async function run() {
 
     // all collections
     const parcelsCollection = db.collection("allParcels");
-
     const usersCollection = db.collection("allUsers");
 
     const paymentsCollection = db.collection("allPayments");
 
 
-    admin.initializeApp({
+  admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
 
@@ -169,7 +168,6 @@ async function run() {
         result: insertResult,
       });
     });
-
     app.post("/users", async (req, res) => {
       const { email, role, last_log_in, created_at } = req.body;
 
