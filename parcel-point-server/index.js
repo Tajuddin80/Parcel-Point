@@ -5,6 +5,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
+const admin = require("firebase-admin");
+const serviceAccount = require("./parcel-point-firebase-key.json");
 
 const client = new MongoClient(process.env.MONGODB_URI, {
   serverApi: {
@@ -33,6 +35,34 @@ async function run() {
 
     const paymentsCollection = db.collection("allPayments");
 
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+
+    // custom middleware
+    const verifyFireBaseToken = async (req, res, next) => {
+      // console.log('header in iddleware', req.headers);
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+      const token = authHeader.split(" ")[1];
+
+      if (!token) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+
+      //  verify the token here
+      try {
+        const decoded = await admin.auth().verifyIdToken(token);
+        req.decoded = decoded;
+        next();
+      } catch (error) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+    };
+
     // add parcels to the db
     app.post("/parcels", async (req, res) => {
       try {
@@ -46,7 +76,7 @@ async function run() {
     });
 
     // get parcels from db
-    app.get("/parcels", async (req, res) => {
+    app.get("/parcels", verifyFireBaseToken, async (req, res) => {
       try {
         const userEmail = req.query.email;
         const query = userEmail ? { created_by: userEmail } : {};
@@ -100,49 +130,88 @@ async function run() {
       }
     });
 
-app.post("/users", async (req, res) => {
-  const { email, role, last_log_in, created_at } = req.body;
+    app.post("/users", async (req, res) => {
+      const { email, role, last_log_in, created_at } = req.body;
 
-  if (!email) {
-    return res.status(400).send({ message: "Email is required" });
-  }
+      if (!email) {
+        return res.status(400).send({ message: "Email is required" });
+      }
 
-  const userExists = await usersCollection.findOne({ email });
+      const userExists = await usersCollection.findOne({ email });
 
-  if (userExists) {
-    // User already exists — update last_log_in only
-    const updateResult = await usersCollection.updateOne(
-      { email },
-      { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
-    );
+      if (userExists) {
+        // User already exists — update last_log_in only
+        const updateResult = await usersCollection.updateOne(
+          { email },
+          { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
+        );
 
-    return res.status(200).send({
-      message: "User already exists, last_log_in updated",
-      inserted: false,
-      updated: updateResult.modifiedCount > 0,
+        return res.status(200).send({
+          message: "User already exists, last_log_in updated",
+          inserted: false,
+          updated: updateResult.modifiedCount > 0,
+        });
+      }
+
+      // New user — insert all data
+      const user = {
+        email,
+        role: role || "user",
+        last_log_in,
+        created_at,
+      };
+
+      const insertResult = await usersCollection.insertOne(user);
+
+      return res.status(201).send({
+        message: "New user created",
+        inserted: true,
+        result: insertResult,
+      });
     });
-  }
 
-  // New user — insert all data
-  const user = {
-    email,
-    role: role || "user",
-    last_log_in,
-    created_at,
-  };
+    app.post("/users", async (req, res) => {
+      const { email, role, last_log_in, created_at } = req.body;
 
-  const insertResult = await usersCollection.insertOne(user);
+      if (!email) {
+        return res.status(400).send({ message: "Email is required" });
+      }
 
-  return res.status(201).send({
-    message: "New user created",
-    inserted: true,
-    result: insertResult,
-  });
-});
+      const userExists = await usersCollection.findOne({ email });
 
+      if (userExists) {
+        // User already exists — update last_log_in only
+        const updateResult = await usersCollection.updateOne(
+          { email },
+          { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
+        );
+
+        return res.status(200).send({
+          message: "User already exists, last_log_in updated",
+          inserted: false,
+          updated: updateResult.modifiedCount > 0,
+        });
+      }
+
+      // New user — insert all data
+      const user = {
+        email,
+        role: role || "user",
+        last_log_in,
+        created_at,
+      };
+
+      const insertResult = await usersCollection.insertOne(user);
+
+      return res.status(201).send({
+        message: "New user created",
+        inserted: true,
+        result: insertResult,
+      });
+    });
 
     // save payment in db
-    app.post("/payments", async (req, res) => {
+    app.post("/payments", verifyFireBaseToken, async (req, res) => {
       const payment = req.body;
       const {
         parcelName,
@@ -206,7 +275,7 @@ app.post("/users", async (req, res) => {
       }
     });
 
-    app.get("/payments", async (req, res) => {
+    app.get("/payments", verifyFireBaseToken, async (req, res) => {
       const userEmail = req.query.email;
 
       try {
