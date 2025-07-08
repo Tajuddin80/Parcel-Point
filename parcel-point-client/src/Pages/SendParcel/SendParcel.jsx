@@ -29,44 +29,103 @@ const SendParcel = () => {
     reset,
     formState: { errors },
   } = useForm();
+
+  // Watch parcel type for conditional weight input
+  const parcelType = watch("parcelType", "Document");
+
+  // Sender cascading selects
+  const senderRegion = watch("senderRegion");
+  const senderDistrict = watch("senderDistrict");
+  const [senderDistricts, setSenderDistricts] = useState([]);
+  const [senderWarehouses, setSenderWarehouses] = useState([]);
+
+  // Receiver cascading selects
+  const receiverRegion = watch("receiverRegion");
+  const receiverDistrict = watch("receiverDistrict");
+  const [receiverDistricts, setReceiverDistricts] = useState([]);
+  const [receiverWarehouses, setReceiverWarehouses] = useState([]);
+
+  // Contact type states (Mobile / Tel) for validation
   const [senderContactType, setSenderContactType] = useState("Mobile");
   const [receiverContactType, setReceiverContactType] = useState("Mobile");
 
-  const parcelType = watch("parcelType", "Document");
-  const senderRegion = watch("senderRegion");
-  const receiverRegion = watch("receiverRegion");
-
-  const [senderWarehouses, setSenderWarehouses] = useState([]);
-  const [receiverWarehouses, setReceiverWarehouses] = useState([]);
+  // Unique regions list
   const uniqueRegions = Array.from(new Set(warehouseData.map((w) => w.region)));
 
+  // Update sender districts when senderRegion changes
   useEffect(() => {
     if (senderRegion) {
-      const list = Array.from(
-        new Set(
-          warehouseData
-            .filter((w) => w.region === senderRegion)
-            .map((w) => w.district)
-        )
-      );
-      setSenderWarehouses(list);
+      const districts = warehouseData
+        .filter((w) => w.region === senderRegion)
+        .map((w) => w.district);
+      setSenderDistricts([...new Set(districts)]);
+      setValue("senderDistrict", "");
+      setSenderWarehouses([]);
+      setValue("senderWarehouse", "");
+    } else {
+      setSenderDistricts([]);
+      setSenderWarehouses([]);
+      setValue("senderDistrict", "");
       setValue("senderWarehouse", "");
     }
   }, [senderRegion, setValue]);
 
+  // Update sender warehouses when senderDistrict changes
+  useEffect(() => {
+    if (senderRegion && senderDistrict) {
+      const entry = warehouseData.find(
+        (w) => w.region === senderRegion && w.district === senderDistrict
+      );
+      if (entry) {
+        setSenderWarehouses(entry.covered_area);
+        setValue("senderWarehouse", "");
+      } else {
+        setSenderWarehouses([]);
+        setValue("senderWarehouse", "");
+      }
+    } else {
+      setSenderWarehouses([]);
+      setValue("senderWarehouse", "");
+    }
+  }, [senderRegion, senderDistrict, setValue]);
+
+  // Update receiver districts when receiverRegion changes
   useEffect(() => {
     if (receiverRegion) {
-      const list = Array.from(
-        new Set(
-          warehouseData
-            .filter((w) => w.region === receiverRegion)
-            .map((w) => w.district)
-        )
-      );
-      setReceiverWarehouses(list);
+      const districts = warehouseData
+        .filter((w) => w.region === receiverRegion)
+        .map((w) => w.district);
+      setReceiverDistricts([...new Set(districts)]);
+      setValue("receiverDistrict", "");
+      setReceiverWarehouses([]);
+      setValue("receiverWarehouse", "");
+    } else {
+      setReceiverDistricts([]);
+      setReceiverWarehouses([]);
+      setValue("receiverDistrict", "");
       setValue("receiverWarehouse", "");
     }
   }, [receiverRegion, setValue]);
+
+  // Update receiver warehouses when receiverDistrict changes
+  useEffect(() => {
+    if (receiverRegion && receiverDistrict) {
+      const entry = warehouseData.find(
+        (w) => w.region === receiverRegion && w.district === receiverDistrict
+      );
+      if (entry) {
+        setReceiverWarehouses(entry.covered_area);
+        setValue("receiverWarehouse", "");
+      } else {
+        setReceiverWarehouses([]);
+        setValue("receiverWarehouse", "");
+      }
+    } else {
+      setReceiverWarehouses([]);
+      setValue("receiverWarehouse", "");
+    }
+  }, [receiverRegion, receiverDistrict, setValue]);
+
   const generateTrackingId = () =>
     "TRK-" +
     Date.now().toString(36).toUpperCase() +
@@ -141,7 +200,6 @@ const SendParcel = () => {
     const userEmail = user?.email || "guest@example.com";
     const userName = user?.displayName || "guest";
 
-    // First modal: summary without tracking/time
     MySwal.fire({
       icon: "",
       title: (
@@ -202,11 +260,10 @@ const SendParcel = () => {
           created_by: userEmail,
           totalCost: costInfo.total,
         };
+console.log(orderData);
 
-        // save to database
         axiosSecure.post("/parcels", orderData).then((res) => {
           if (res.data.insertedId) {
-            // TODO: Redirect to the payment page
             MySwal.fire({
               html: (
                 <div className="text-left text-sm md:text-base">
@@ -257,7 +314,6 @@ const SendParcel = () => {
                   "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
               },
             });
-            console.log("Final Order Data:", orderData);
           }
         });
       }
@@ -272,9 +328,7 @@ const SendParcel = () => {
       <div className="border-b mb-6"></div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <h2 className="text-xl font-semibold mb-4">
-          Enter your parcel details
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">Enter your parcel details</h2>
 
         {/* PARCEL TYPE */}
         <div className="flex items-center gap-4 mb-4">
@@ -311,9 +365,7 @@ const SendParcel = () => {
               }`}
             />
             {errors.parcelName && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.parcelName.message}
-              </p>
+              <p className="text-red-500 text-sm mt-1">{errors.parcelName.message}</p>
             )}
           </div>
 
@@ -322,6 +374,7 @@ const SendParcel = () => {
               <input
                 {...register("parcelWeight", {
                   required: "Parcel weight is required",
+                  min: { value: 0.01, message: "Weight must be positive" },
                 })}
                 type="number"
                 step="0.01"
@@ -331,9 +384,7 @@ const SendParcel = () => {
                 }`}
               />
               {errors.parcelWeight && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.parcelWeight.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{errors.parcelWeight.message}</p>
               )}
             </div>
           )}
@@ -355,12 +406,56 @@ const SendParcel = () => {
                   }`}
                 />
                 {errors.senderName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.senderName.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.senderName.message}</p>
                 )}
               </div>
 
+              {/* Sender Region */}
+              <div>
+                <select
+                  {...register("senderRegion", {
+                    required: "Select sender region",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.senderRegion ? "border-red-500" : ""
+                  }`}
+                >
+                  <option value="">Select your region</option>
+                  {uniqueRegions.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                {errors.senderRegion && (
+                  <p className="text-red-500 text-sm mt-1">{errors.senderRegion.message}</p>
+                )}
+              </div>
+
+              {/* Sender District */}
+              <div>
+                <select
+                  {...register("senderDistrict", {
+                    required: "Select sender district",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.senderDistrict ? "border-red-500" : ""
+                  }`}
+                  disabled={!senderDistricts.length}
+                >
+                  <option value="">Select your district</option>
+                  {senderDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {errors.senderDistrict && (
+                  <p className="text-red-500 text-sm mt-1">{errors.senderDistrict.message}</p>
+                )}
+              </div>
+
+              {/* Sender Warehouse */}
               <div>
                 <select
                   {...register("senderWarehouse", {
@@ -369,18 +464,17 @@ const SendParcel = () => {
                   className={`border rounded p-2 w-full ${
                     errors.senderWarehouse ? "border-red-500" : ""
                   }`}
+                  disabled={!senderWarehouses.length}
                 >
-                  <option value="">Select Warehouse</option>
-                  {senderWarehouses.map((d, idx) => (
-                    <option key={idx} value={d}>
-                      {d}
+                  <option value="">Select warehouse (covered area)</option>
+                  {senderWarehouses.map((w) => (
+                    <option key={w} value={w}>
+                      {w}
                     </option>
                   ))}
                 </select>
                 {errors.senderWarehouse && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.senderWarehouse.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.senderWarehouse.message}</p>
                 )}
               </div>
 
@@ -395,12 +489,11 @@ const SendParcel = () => {
                   }`}
                 />
                 {errors.senderAddress && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.senderAddress.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.senderAddress.message}</p>
                 )}
               </div>
 
+              {/* Sender Contact Number */}
               <div className="flex gap-2 items-start">
                 <div className="flex-1">
                   <input
@@ -431,12 +524,9 @@ const SendParcel = () => {
                     }`}
                   />
                   {errors.senderContact && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.senderContact.message}
-                    </p>
+                    <p className="text-red-500 text-sm mt-1">{errors.senderContact.message}</p>
                   )}
                 </div>
-
                 <div>
                   <select
                     value={senderContactType}
@@ -448,31 +538,7 @@ const SendParcel = () => {
                   </select>
                 </div>
               </div>
-
-              <div className="md:col-span-2">
-                <select
-                  {...register("senderRegion", {
-                    required: "Select sender region",
-                  })}
-                  className={`border rounded p-2 w-full ${
-                    errors.senderRegion ? "border-red-500" : ""
-                  }`}
-                >
-                  <option value="">Select your region</option>
-                  {uniqueRegions.map((r, idx) => (
-                    <option key={idx} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-                {errors.senderRegion && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.senderRegion.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
+               <div className="md:col-span-2">
                 <textarea
                   {...register("pickupInstruction", {
                     required: "Pickup instruction is required",
@@ -487,7 +553,7 @@ const SendParcel = () => {
                     {errors.pickupInstruction.message}
                   </p>
                 )}
-              </div>
+              </div>   
             </div>
           </div>
 
@@ -506,12 +572,56 @@ const SendParcel = () => {
                   }`}
                 />
                 {errors.receiverName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.receiverName.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.receiverName.message}</p>
                 )}
               </div>
 
+              {/* Receiver Region */}
+              <div>
+                <select
+                  {...register("receiverRegion", {
+                    required: "Select receiver region",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.receiverRegion ? "border-red-500" : ""
+                  }`}
+                >
+                  <option value="">Select your region</option>
+                  {uniqueRegions.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                {errors.receiverRegion && (
+                  <p className="text-red-500 text-sm mt-1">{errors.receiverRegion.message}</p>
+                )}
+              </div>
+
+              {/* Receiver District */}
+              <div>
+                <select
+                  {...register("receiverDistrict", {
+                    required: "Select receiver district",
+                  })}
+                  className={`border rounded p-2 w-full ${
+                    errors.receiverDistrict ? "border-red-500" : ""
+                  }`}
+                  disabled={!receiverDistricts.length}
+                >
+                  <option value="">Select your district</option>
+                  {receiverDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {errors.receiverDistrict && (
+                  <p className="text-red-500 text-sm mt-1">{errors.receiverDistrict.message}</p>
+                )}
+              </div>
+
+              {/* Receiver Warehouse */}
               <div>
                 <select
                   {...register("receiverWarehouse", {
@@ -520,18 +630,17 @@ const SendParcel = () => {
                   className={`border rounded p-2 w-full ${
                     errors.receiverWarehouse ? "border-red-500" : ""
                   }`}
+                  disabled={!receiverWarehouses.length}
                 >
-                  <option value="">Select Warehouse</option>
-                  {receiverWarehouses.map((d, idx) => (
-                    <option key={idx} value={d}>
-                      {d}
+                  <option value="">Select warehouse (covered area)</option>
+                  {receiverWarehouses.map((w) => (
+                    <option key={w} value={w}>
+                      {w}
                     </option>
                   ))}
                 </select>
                 {errors.receiverWarehouse && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.receiverWarehouse.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.receiverWarehouse.message}</p>
                 )}
               </div>
 
@@ -546,12 +655,11 @@ const SendParcel = () => {
                   }`}
                 />
                 {errors.receiverAddress && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.receiverAddress.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.receiverAddress.message}</p>
                 )}
               </div>
 
+              {/* Receiver Contact Number */}
               <div className="flex gap-2 items-start">
                 <div className="flex-1">
                   <input
@@ -582,12 +690,9 @@ const SendParcel = () => {
                     }`}
                   />
                   {errors.receiverContact && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.receiverContact.message}
-                    </p>
+                    <p className="text-red-500 text-sm mt-1">{errors.receiverContact.message}</p>
                   )}
                 </div>
-
                 <div>
                   <select
                     value={receiverContactType}
@@ -600,30 +705,7 @@ const SendParcel = () => {
                 </div>
               </div>
 
-              <div className="md:col-span-2">
-                <select
-                  {...register("receiverRegion", {
-                    required: "Select receiver region",
-                  })}
-                  className={`border rounded p-2 w-full ${
-                    errors.receiverRegion ? "border-red-500" : ""
-                  }`}
-                >
-                  <option value="">Select your region</option>
-                  {uniqueRegions.map((r, idx) => (
-                    <option key={idx} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-                {errors.receiverRegion && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.receiverRegion.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
+   <div className="md:col-span-2">
                 <textarea
                   {...register("deliveryInstruction", {
                     required: "Delivery instruction is required",
@@ -643,15 +725,11 @@ const SendParcel = () => {
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 mb-4">
-          * PickUp Time 4pm-7pm Approx.
-        </p>
-
         <button
           type="submit"
-          className="bg-lime-400 hover:bg-lime-500 text-white font-semibold rounded p-2 px-4"
+          className="w-full bg-[#CAEB66] btn cursor-pointer text-[#03373D] font-semibold py-3 rounded text-lg"
         >
-          Proceed to Confirm Booking
+          Send Parcel
         </button>
       </form>
     </section>

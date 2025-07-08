@@ -18,49 +18,56 @@ if (isPending) {
     return <Loader></Loader>
 }
   return (
-   <>
-     <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 mt-6">
-      <table className="table table-zebra w-full text-sm">
-        <thead className="bg-gray-100 text-gray-700 text-xs uppercase">
-          <tr>
-            <th>#</th>
-            <th>Parcel Name</th>
-            <th>Transaction ID</th>
-            <th>User</th>
-            <th>Email</th>
-            <th>Amount (৳)</th>
-            <th>Method</th>
-            <th>Card Type</th>
-            <th>Date</th>
+  <>
+  <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 mt-6">
+    <table className="table table-zebra w-full text-sm md:text-base">
+      <thead className="bg-gray-100 text-gray-700 text-xs md:text-sm uppercase">
+        <tr className="h-14">
+          <th>#</th>
+          <th>Parcel Name</th>
+          <th>Transaction ID</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Amount (৳)</th>
+          <th>Method</th>
+          <th>Card Type</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {payments.map((payment, index) => (
+          <tr key={payment._id} className="h-16 md:h-20">
+            <td>{index + 1}</td>
+            <td className="font-mono text-xs md:text-sm">
+              {payment.parcelName || ''}
+            </td>
+            <td className="font-mono text-xs md:text-sm">
+              {payment.transactionId}
+            </td>
+            <td>{payment.userName}</td>
+            <td className="whitespace-nowrap">{payment.email}</td>
+            <td className="font-semibold text-green-700">৳{payment.amount}</td>
+            <td>{payment.paymentMethod}</td>
+            <td>{payment.cardType}</td>
+            <td className="whitespace-nowrap">
+              {new Date(payment.paid_at).toLocaleString("en-BD", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {payments.map((payment, index) => (
-            <tr key={payment._id}>
-              <td>{index + 1}</td>
-              <td className="font-mono text-xs">{payment.parcelName || ''}</td>
-              <td className="font-mono text-xs">{payment.transactionId}</td>
-              <td>{payment.userName}</td>
-              <td>{payment.email}</td>
-              <td>৳{payment.amount}</td>
-              <td>{payment.paymentMethod}</td>
-              <td>{payment.cardType}</td>
-              <td>
-                {new Date(payment.paid_at).toLocaleString("en-BD", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        ))}
+      </tbody>
+    </table>
 
-      {payments.length === 0 && (
-        <div className="p-4 text-center text-gray-500">No payment history found.</div>
-      )}
-    </div>
-   </>
+    {payments.length === 0 && (
+      <div className="p-6 text-center text-gray-500 text-base">
+        No payment history found.
+      </div>
+    )}
+  </div>
+</>
+
   )
 }
 

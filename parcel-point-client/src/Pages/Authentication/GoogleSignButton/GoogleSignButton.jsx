@@ -10,37 +10,36 @@ const GoogleSignButton = () => {
 
   const from = location.state?.from || "/";
 
-const handleGoogleSignIn = () => {
-  if (loading) return; // prevent double trigger
+  const handleGoogleSignIn = () => {
+    if (loading) return; // prevent double trigger
 
-  signInWithGoogle()
-    .then((result) => {
-      console.log(result.user);
-      navigate(from, { replace: true });
-    })
-    .catch((error) => {
-      console.error("Google sign-in error:", error.message);
-  Swal.fire({
-    icon: "error",
-    title: "Google Sign-In Failed",
-    text: error.message,
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    toast: true,
-    position: "top-end",
-  });
-    });
-};
-
+    signInWithGoogle()
+      .then((result) => {
+        console.log(result.user);
+        navigate(from, { replace: true });
+      })
+      .catch((error) => {
+        console.error("Google sign-in error:", error.message);
+        Swal.fire({
+          icon: "error",
+          title: "Google Sign-In Failed",
+          text: error.message,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          toast: true,
+          position: "top-end",
+        });
+      });
+  };
 
   return (
-   <button
-  onClick={handleGoogleSignIn}
-  type="button"
-  disabled={loading}
-  className="w-full flex btn cursor-pointer items-center justify-center border border-gray-300 rounded-md py-2 mb-4 hover:shadow"
->
+    <button
+      onClick={handleGoogleSignIn}
+      type="button"
+      disabled={loading}
+      className="w-full flex btn cursor-pointer items-center justify-center border border-gray-300 rounded-md py-2 mb-4 hover:shadow"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 32 32"
