@@ -2,7 +2,6 @@ import React from "react";
 import Typewriter from "typewriter-effect";
 import { FaBoxOpen, FaMapMarkedAlt, FaSmile } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Link } from "react-router";
 import useAuth from "../../../hooks/useAuth";
 
 const fadeUp = {

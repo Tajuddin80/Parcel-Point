@@ -24,11 +24,14 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const db = client.db("parcelPoint");
+
     // all collections
-    const parcelsCollection = client.db("parcelPoint").collection("allParcels");
-    const paymentsCollection = client
-      .db("parcelPoint")
-      .collection("allPayments");
+    const parcelsCollection = db.collection("allParcels");
+
+    const usersCollection = db.collection("allUsers");
+
+    const paymentsCollection = db.collection("allPayments");
 
     // add parcels to the db
     app.post("/parcels", async (req, res) => {
@@ -77,7 +80,7 @@ async function run() {
       }
     });
 
-    // Assuming `db` is your connected database instance
+    // Get single parcel by id
     app.get("/parcels/:id", async (req, res) => {
       const parcelId = req.params.id;
 
@@ -97,10 +100,47 @@ async function run() {
       }
     });
 
+app.post("/users", async (req, res) => {
+  const { email, role, last_log_in, created_at } = req.body;
+
+  if (!email) {
+    return res.status(400).send({ message: "Email is required" });
+  }
+
+  const userExists = await usersCollection.findOne({ email });
+
+  if (userExists) {
+    // User already exists — update last_log_in only
+    const updateResult = await usersCollection.updateOne(
+      { email },
+      { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
+    );
+
+    return res.status(200).send({
+      message: "User already exists, last_log_in updated",
+      inserted: false,
+      updated: updateResult.modifiedCount > 0,
+    });
+  }
+
+  // New user — insert all data
+  const user = {
+    email,
+    role: role || "user",
+    last_log_in,
+    created_at,
+  };
+
+  const insertResult = await usersCollection.insertOne(user);
+
+  return res.status(201).send({
+    message: "New user created",
+    inserted: true,
+    result: insertResult,
+  });
+});
 
 
-
-    
     // save payment in db
     app.post("/payments", async (req, res) => {
       const payment = req.body;

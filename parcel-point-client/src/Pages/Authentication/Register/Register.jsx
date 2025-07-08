@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import GoogleSignButton from "../GoogleSignButton/GoogleSignButton";
 import { updateProfile } from "firebase/auth";
 import { imageUpload } from "../../../api/utils";
+import useAxiosPublic from "../../../hooks/useAxiosPublic";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,7 +15,7 @@ const Register = () => {
   const { createUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
+  const axiosPublic = useAxiosPublic();
   const from = location.state?.from?.pathname || "/";
 
   const {
@@ -50,9 +51,42 @@ const Register = () => {
         return;
       }
 
-      //  Create user with email & password
-      const result = await createUser(data.email, data.password);
-      const user = result.user;
+   // Create user with email & password
+const result = await createUser(data.email, data.password);
+const user = result.user;
+
+// Prepare user info
+const userInfo = {
+  email: data.email,
+  role: "user",
+  last_log_in: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+};
+
+// Send to backend
+const userRes = await axiosPublic.post("/users", userInfo);
+console.log(userRes.data);
+
+// Show success alert
+if (userRes.data.inserted || userRes.data.updated) {
+  Swal.fire({
+    icon: "success",
+    title: userRes.data.inserted
+      ? "Welcome to Parcel Point"
+      : "Welcome back!",
+    showConfirmButton: false,
+    timer: 1500,
+    timerProgressBar: true,
+    toast: true,
+    position: "center",
+  });
+}
+
+
+      // or
+
+      // const {data} = await axiosPublic.post('/users',userInfo)
+      // console.log(data);
 
       // Update profile
       await updateProfile(user, {

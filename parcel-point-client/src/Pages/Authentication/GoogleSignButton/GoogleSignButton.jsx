@@ -2,33 +2,69 @@ import React from "react";
 import useAuth from "../../../hooks/useAuth";
 import { useLocation, useNavigate } from "react-router";
 import Swal from "sweetalert2";
+import useAxiosPublic from "../../../hooks/useAxiosPublic";
 const GoogleSignButton = () => {
   const { signInWithGoogle, loading } = useAuth();
 
   const location = useLocation();
   const navigate = useNavigate();
-
+  const axiosPublic = useAxiosPublic();
   const from = location.state?.from || "/";
 
   const handleGoogleSignIn = () => {
     if (loading) return; // prevent double trigger
-
     signInWithGoogle()
-      .then((result) => {
-        console.log(result.user);
-        navigate(from, { replace: true });
+      .then(async (result) => {
+        const user = result.user;
+
+        // Prepare user info for backend
+        const userInfo = {
+          email: user.email,
+          role: "user",
+          last_log_in: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        };
+
+        try {
+          const userRes = await axiosPublic.post("/users", userInfo);
+          console.log(userRes.data.message);
+
+          let title = "Already logged in";
+          if (userRes.data.inserted) {
+            title = "Welcome to Parcel Point";
+          } else if (userRes.data.updated) {
+            title = "Welcome back!";
+          }
+
+          Swal.fire({
+            icon: "success",
+            title,
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            toast: true,
+            position: "center",
+          });
+
+          // Navigate after short delay (matches toast duration)
+          setTimeout(() => {
+            navigate(from || "/", { replace: true });
+          }, 1600); // a bit more than toast timer
+        } catch (error) {
+          console.error("Error saving user info:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Something went wrong",
+            text: error.message,
+          });
+        }
       })
       .catch((error) => {
         console.error("Google sign-in error:", error.message);
         Swal.fire({
           icon: "error",
-          title: "Google Sign-In Failed",
+          title: "Google Sign-in Failed",
           text: error.message,
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          toast: true,
-          position: "top-end",
         });
       });
   };

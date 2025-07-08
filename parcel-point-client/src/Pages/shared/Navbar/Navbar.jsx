@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router";
+import { Link, NavLink } from "react-router";
 import ParcelPointLogo from "../ParcelPointLogo/ParcelPointLogo";
 import useAuth from "../../../hooks/useAuth";
 
@@ -193,16 +193,13 @@ const Navbar = () => {
             </div>
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+              className="menu menu-lg dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
             >
               <li>
-                <a className="justify-between">
+                <Link to={'/dashboard/updateProfile'} className="justify-between">
                   Profile
                   <span className="badge">New</span>
-                </a>
-              </li>
-              <li>
-                <a>Settings</a>
+                </Link>
               </li>
               <li>
                 <button
