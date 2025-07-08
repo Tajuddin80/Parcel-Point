@@ -1,7 +1,7 @@
 import React from "react";
 import riderImg from "../../assets/agent-pending.png";
-import Lottie from "lottie-react";
-// import riderReact from '../../assets/animations/rider.json'
+// import Lottie from "lottie-react";
+import riderReact from '../../assets/animations/rider.json'
 const regions = [
   "Dhaka",
   "Chattogram",

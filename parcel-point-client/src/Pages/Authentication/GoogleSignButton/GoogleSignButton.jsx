@@ -1,6 +1,7 @@
 import React from "react";
 import useAuth from "../../../hooks/useAuth";
 import { useLocation, useNavigate } from "react-router";
+import Swal from "sweetalert2";
 const GoogleSignButton = () => {
   const { signInWithGoogle, loading } = useAuth();
 
@@ -19,7 +20,16 @@ const handleGoogleSignIn = () => {
     })
     .catch((error) => {
       console.error("Google sign-in error:", error.message);
-      alert("Google sign-in failed: " + error.message); // Or use a toast/Swal
+  Swal.fire({
+    icon: "error",
+    title: "Google Sign-In Failed",
+    text: error.message,
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    toast: true,
+    position: "top-end",
+  });
     });
 };
 

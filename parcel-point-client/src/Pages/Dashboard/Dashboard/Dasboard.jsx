@@ -1,100 +1,130 @@
-import { FaTruck, FaMoneyCheckAlt, FaSearch } from "react-icons/fa";
+import React from "react";
+import Typewriter from "typewriter-effect";
+import { FaBoxOpen, FaMapMarkedAlt, FaSmile } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { Link } from "react-router";
+import useAuth from "../../../hooks/useAuth";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
 const Dashboard = () => {
-  const parcels = [
-    {
-      id: "PCL-001",
-      name: "Taj Uddin Certificate",
-      type: "Document",
-      status: "Pending",
-      warehouse: "Cumilla",
-      amount: 200,
-    },
-    {
-      id: "PCL-002",
-      name: "Electronics",
-      type: "Box",
-      status: "Shipped",
-      warehouse: "Dhaka",
-      amount: 500,
-    },
-    // Add more parcels as needed
-  ];
+  const { user } = useAuth();
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="text-2xl font-bold text-center text-primary">📦 My Parcels</div>
+    <div className="min-h-screen w-full p-6 flex flex-col justify-center items-center space-y-12 bg-base-100">
+      {/* Welcome Message */}
+      <motion.div
+        className="text-center space-y-2"
+        initial="hidden"
+        animate="visible"
+        variants={fadeUp}
+      >
+        <h1 className="text-4xl md:text-5xl font-bold text-primary">
+          Welcome, {user?.displayName}! 👋
+        </h1>
+        <div className="text-xl md:text-2xl font-semibold text-secondary">
+          <Typewriter
+            options={{
+              strings: [
+                "Glad to see you back at Parcel Point!",
+                "Your Reliable Parcel Delivery Platform.",
+                "Fast. Secure. Nationwide Delivery.",
+              ],
+              autoStart: true,
+              loop: true,
+            }}
+          />
+        </div>
+      </motion.div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="stat bg-base-200 shadow rounded-xl">
-          <div className="stat-figure text-primary">
-            <FaTruck className="text-2xl" />
-          </div>
-          <div className="stat-title">Total Parcels</div>
-          <div className="stat-value">12</div>
+      {/* User Info Card */}
+      <motion.div
+        className="relative bg-gradient-to-br from-primary/10 to-secondary/10 p-8 rounded-3xl shadow-xl w-full max-w-xl text-center space-y-6 border border-base-300"
+        initial="hidden"
+        animate="visible"
+        variants={fadeUp}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="relative w-32 h-32 mx-auto">
+          <img
+            src={user?.photoURL}
+            alt="User Profile"
+            className="w-full h-full object-cover rounded-full border-4 border-primary shadow-lg"
+          />
         </div>
-        <div className="stat bg-base-200 shadow rounded-xl">
-          <div className="stat-figure text-success">
-            <FaMoneyCheckAlt className="text-2xl" />
-          </div>
-          <div className="stat-title">Paid</div>
-          <div className="stat-value text-success">৳1000</div>
-        </div>
-        <div className="stat bg-base-200 shadow rounded-xl">
-          <div className="stat-figure text-warning">
-            <FaSearch className="text-2xl" />
-          </div>
-          <div className="stat-title">In Transit</div>
-          <div className="stat-value text-warning">3</div>
-        </div>
-      </div>
 
-      {/* Parcel Table */}
-      <div className="overflow-x-auto bg-base-100 rounded-xl shadow">
-        <table className="table table-zebra w-full">
-          <thead className="bg-base-200 text-base font-semibold">
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Warehouse</th>
-              <th>Status</th>
-              <th>Amount</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parcels.map((parcel) => (
-              <tr key={parcel.id}>
-                <td>{parcel.id}</td>
-                <td>{parcel.name}</td>
-                <td>{parcel.type}</td>
-                <td>{parcel.warehouse}</td>
-                <td>
-                  <span
-                    className={`badge ${
-                      parcel.status === "Pending"
-                        ? "badge-warning"
-                        : parcel.status === "Shipped"
-                        ? "badge-info"
-                        : "badge-success"
-                    }`}
-                  >
-                    {parcel.status}
-                  </span>
-                </td>
-                <td>৳{parcel.amount}</td>
-                <td className="flex gap-2">
-                  <button className="btn btn-xs btn-outline btn-primary">View</button>
-                  <button className="btn btn-xs btn-outline btn-accent">Pay</button>
-                  <button className="btn btn-xs btn-outline btn-secondary">Track</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <div>
+          <h2 className="text-2xl font-bold text-base-content">{user?.displayName}</h2>
+          <p className="text-base text-base-content mt-1">📧 {user?.email}</p>
+          <div className="mt-3">
+            <span className="inline-block bg-primary text-white px-4 py-1 rounded-full text-sm shadow">
+              Role: {user?.role || "Customer"}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <Link
+            to="/update-profile"
+            className="inline-block mt-4 px-5 py-2 text-sm font-medium text-white bg-secondary rounded-full hover:bg-secondary-focus transition duration-200"
+          >
+            Update Profile
+          </Link>
+        </div>
+      </motion.div>
+
+      {/* Overview Text */}
+      <motion.div
+        className="rounded-xl text-center space-y-6 w-full max-w-3xl"
+        initial="hidden"
+        animate="visible"
+        variants={fadeUp}
+        transition={{ delay: 0.6 }}
+      >
+        <p className="text-lg text-base-content">
+          This dashboard gives you a quick glance at your parcel delivery activity.
+          From here, you can check your parcel summaries, manage payments, and
+          stay updated with delivery statuses — all in one place.
+        </p>
+        <p className="text-lg text-base-content">
+          Use the sidebar or menu to move to other sections like "My Parcels", "Payments",
+          or "Tracking" to explore further.
+        </p>
+      </motion.div>
+
+      {/* Features Section */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-6xl w-full"
+        initial="hidden"
+        animate="visible"
+        variants={fadeUp}
+        transition={{ delay: 0.9 }}
+      >
+        <div className="bg-base-200 p-8 rounded-xl shadow hover:shadow-lg transition duration-300">
+          <FaBoxOpen className="text-5xl text-primary mb-4 mx-auto" />
+          <h3 className="text-xl font-semibold mb-2">Manage Your Parcels</h3>
+          <p className="text-base text-base-content">
+            View all your parcel bookings, delivery status, and history.
+          </p>
+        </div>
+        <div className="bg-base-200 p-8 rounded-xl shadow hover:shadow-lg transition duration-300">
+          <FaMapMarkedAlt className="text-5xl text-success mb-4 mx-auto" />
+          <h3 className="text-xl font-semibold mb-2">Track Deliveries</h3>
+          <p className="text-base text-base-content">
+            Get real-time updates on your parcel’s journey across Bangladesh.
+          </p>
+        </div>
+        <div className="bg-base-200 p-8 rounded-xl shadow hover:shadow-lg transition duration-300">
+          <FaSmile className="text-5xl text-warning mb-4 mx-auto" />
+          <h3 className="text-xl font-semibold mb-2">Enjoy Seamless Service</h3>
+          <p className="text-base text-base-content">
+            Designed to give you a fast, easy, and satisfying delivery experience.
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };

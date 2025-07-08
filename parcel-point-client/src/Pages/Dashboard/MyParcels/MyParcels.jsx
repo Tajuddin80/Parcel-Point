@@ -298,7 +298,7 @@ import useAuth from "../../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   FaTruck,
   FaMoneyCheckAlt,
@@ -364,8 +364,6 @@ const MyParcels = () => {
 
   return (
     <div className="p-2 space-y-8">
-   
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="stat bg-base-200 rounded shadow">
@@ -439,7 +437,6 @@ const MyParcels = () => {
                     }}
                   >
                     <span className="badge badge-outline text-xs flex items-center gap-1">
-                    
                       {parcel.trackingId}
                     </span>
                   </div>
@@ -509,11 +506,14 @@ const MyParcels = () => {
               </tr>
             ))}
             {parcels.length === 0 && (
-              <tr>
-                <td colSpan="11" className="text-center text-gray-400 py-8">
-                  You don’t have any parcels yet.
-                </td>
-              </tr>
+              <>
+                <tr>
+                  <td colSpan="11" className="text-center text-gray-400 py-8">
+                    You don’t have any parcels yet. <br />  <Link to={'/sendParcel'} className="btn btn-primary mt-10">Send a Parcel</Link>
+                  </td>
+                </tr>
+            
+              </>
             )}
           </tbody>
         </table>

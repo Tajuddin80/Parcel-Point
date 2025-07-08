@@ -18,7 +18,7 @@ import Payment from "../Pages/Dashboard/Payment/Payment";
 import PaymentHistory from "../Pages/Dashboard/PaymentHistory/PaymentHistory";
 import UpdateProfile from "../Pages/Dashboard/UpdateProfile/UpdateProfile";
 import TrackParcel from "../Pages/Dashboard/TrackParcel/TrackParcel";
-// import Dashboard from "../Pages/Dashboard/Dashboard/Dasboard";
+import Dashboard from "../Pages/Dashboard/Dashboard/Dasboard";
 
 // Define loader function
 const homeLoader = async () => {
@@ -119,10 +119,10 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
     children: [
-      // {
-      //   index: true,
-      //   element: <Dashboard></Dashboard>,
-      // },
+      {
+        index: true,
+        element: <Dashboard></Dashboard>,
+      },
       {
         path: "myParcels",
         element: <MyParcels></MyParcels>,
