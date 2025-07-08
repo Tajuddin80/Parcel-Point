@@ -108,7 +108,7 @@ async function run() {
         email,
         userName,
         amount,
-        cardType
+        cardType,
       } = payment;
 
       try {

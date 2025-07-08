@@ -1,11 +1,19 @@
 import React from "react";
 import { Link, NavLink, Outlet } from "react-router";
 import ParcelPointLogo from "../../Pages/shared/ParcelPointLogo/ParcelPointLogo";
-import { FaHome, FaBoxOpen, FaMoneyCheckAlt, FaSearchLocation, FaUserEdit } from "react-icons/fa";
+import {
+  FaHome,
+  FaBoxOpen,
+  FaMoneyCheckAlt,
+  FaSearchLocation,
+  FaUserEdit,
+} from "react-icons/fa";
 
 const navLinkClass = ({ isActive }) =>
   `flex items-center gap-2 px-3 py-2 rounded ${
-    isActive ? "bg-[oklch(84.1%_0.238_128.85)] text-black font-semibold" : "hover:bg-gray-200"
+    isActive
+      ? "bg-[#CAEB66] text-base md:text-lg rounded-lg"
+      : "hover:bg-[#CAEB66]  text-base md:text-lg rounded"
   }`;
 const DashboardLayout = () => {
   return (
@@ -39,7 +47,9 @@ const DashboardLayout = () => {
         </div>
 
         {/* Page content */}
-        <div className="p-4"><Outlet></Outlet></div>
+        <div className="p-4">
+          <Outlet></Outlet>
+        </div>
       </div>
 
       <div className="drawer-side">
@@ -48,33 +58,36 @@ const DashboardLayout = () => {
           htmlFor="dashboard-drawer"
           className="drawer-overlay lg:hidden"
         ></label>
-        <ul className="menu p-4 w-80 min-h-full bg-base-200">
+        <ul className="menu p-4 gap-2 w-80 min-h-full bg-base-200">
+          <div className="mb-5">
           <ParcelPointLogo></ParcelPointLogo>
-     <li>
-        <NavLink to="/" className={navLinkClass}>
-          <FaHome /> Home
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/dashboard/myParcels" className={navLinkClass}>
-          <FaBoxOpen /> My Parcels
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/dashboard/paymentHistory" className={navLinkClass}>
-          <FaMoneyCheckAlt /> Payment History
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/dashboard/trackPackage" className={navLinkClass}>
-          <FaSearchLocation /> Track a Package
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/dashboard/updateProfile" className={navLinkClass}>
-          <FaUserEdit /> Update Profile
-        </NavLink>
-      </li>
+
+          </div>
+          <li>
+            <NavLink to="/" className={navLinkClass}>
+              <FaHome /> Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/dashboard/myParcels" className={navLinkClass}>
+              <FaBoxOpen /> My Parcels
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/dashboard/paymentHistory" className={navLinkClass}>
+              <FaMoneyCheckAlt /> Payment History
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/dashboard/trackParcel" className={navLinkClass}>
+              <FaSearchLocation /> Track a Parcel
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/dashboard/updateProfile" className={navLinkClass}>
+              <FaUserEdit /> Update Profile
+            </NavLink>
+          </li>
         </ul>
       </div>
     </div>
