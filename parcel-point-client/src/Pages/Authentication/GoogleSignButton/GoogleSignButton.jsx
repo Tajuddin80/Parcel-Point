@@ -1,4 +1,3 @@
-import React from "react";
 import useAuth from "../../../hooks/useAuth";
 import { useLocation, useNavigate } from "react-router";
 import Swal from "sweetalert2";
@@ -17,7 +16,6 @@ const GoogleSignButton = () => {
       .then(async (result) => {
         const user = result.user;
 
-        // Prepare user info for backend
         // Prepare user info for backend
         const userInfo = {
           email: user.email,

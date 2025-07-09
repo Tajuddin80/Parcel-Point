@@ -15,60 +15,62 @@ const PendingRiders = () => {
     refetch,
   } = useQuery({
     queryKey: ["pendingRiders"],
-  
+
     queryFn: async () => {
       const res = await axiosSecure.get("/pending");
       return res.data;
     },
   });
 
-  const handleDecision = async (riderId, action) => {
-  const confirmResult = await Swal.fire({
-    title: `Are you sure you want to ${action} this rider?`,
-    text: action === "approved"
-      ? "The rider will be marked as active."
-      : "This rider will be rejected and deleted permanently!",
-    icon: action === "approved" ? "question" : "warning",
-    showCancelButton: true,
-    confirmButtonText: `Yes, ${action}`,
-    cancelButtonText: "Cancel",
-    confirmButtonColor: action === "approved" ? "#3085d6" : "#d33",
-  });
+  const handleDecision = async (riderId, action, email) => {
+    const confirmResult = await Swal.fire({
+      title: `Are you sure you want to ${action} this rider?`,
+      text:
+        action === "approved"
+          ? "The rider will be marked as active."
+          : "This rider will be rejected and deleted permanently!",
+      icon: action === "approved" ? "question" : "warning",
+      showCancelButton: true,
+      confirmButtonText: `Yes, ${action}`,
+      cancelButtonText: "Cancel",
+      confirmButtonColor: action === "approved" ? "#3085d6" : "#d33",
+    });
 
-  if (!confirmResult.isConfirmed) return;
+    if (!confirmResult.isConfirmed) return;
 
-  try {
-    let patchResponse;
-    let deleteResponse;
+    try {
+      let patchResponse;
+      let deleteResponse;
 
-    if (action === "approved") {
-      patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
-        status: "active",
-      });
+      if (action === "approved") {
+        patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
+          status: "active",
+          email,
+        });
 
-      if (patchResponse?.data?.modifiedCount > 0) {
-        Swal.fire("Rider approved!", "", "success");
-        refetch();
-        setModalOpen(false);
-      }
-    } else if (action === "rejected") {
-      patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
-        status: "rejected",
-      });
-
-      if (patchResponse?.data?.modifiedCount > 0) {
-        deleteResponse = await axiosSecure.delete(`/riders/${riderId}`);
-        if (deleteResponse?.data?.deletedCount > 0) {
-          Swal.fire("Rider rejected and deleted!", "", "success");
+        if (patchResponse?.data?.modifiedCount > 0) {
+          Swal.fire("Rider approved!", "", "success");
           refetch();
           setModalOpen(false);
         }
+      } else if (action === "rejected") {
+        patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
+          status: "rejected",
+        });
+
+        if (patchResponse?.data?.modifiedCount > 0) {
+          deleteResponse = await axiosSecure.delete(`/riders/${riderId}`);
+          if (deleteResponse?.data?.deletedCount > 0) {
+            Swal.fire("Rider rejected and deleted!", "", "success");
+            refetch();
+            setModalOpen(false);
+          }
+        }
       }
+    } catch (error) {
+      Swal.fire("Error", "Something went wrong!", "error");
     }
-  } catch (error) {
-    Swal.fire("Error", "Something went wrong!", "error");
-  }
-};
+  };
 
   if (isPending) {
     return <Loader></Loader>;
@@ -90,6 +92,7 @@ const PendingRiders = () => {
               <th>District</th>
               <th>Warehouse</th>
               <th>Contact</th>
+              <th>Email</th>
               <th>Bike</th>
               <th>Action</th>
             </tr>
@@ -103,6 +106,7 @@ const PendingRiders = () => {
                 <td>{rider.district}</td>
                 <td>{rider.warehouse}</td>
                 <td>{rider.contact}</td>
+                <td>{rider.email}</td>
                 <td>{rider.bikeBrand}</td>
                 <td>
                   <button
@@ -180,13 +184,25 @@ const PendingRiders = () => {
             <div className="mt-6 flex flex-wrap justify-end gap-4">
               <button
                 className="btn btn-success"
-                onClick={() => handleDecision(selectedRider._id, "approved")}
+                onClick={() =>
+                  handleDecision(
+                    selectedRider._id,
+                    "approved",
+                    selectedRider.email
+                  )
+                }
               >
                 Approve
               </button>
               <button
                 className="btn btn-error"
-                onClick={() => handleDecision(selectedRider._id, "rejected")}
+                onClick={() =>
+                  handleDecision(
+                    selectedRider._id,
+                    "rejected",
+                    selectedRider.email
+                  )
+                }
               >
                 Reject
               </button>
