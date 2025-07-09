@@ -94,11 +94,9 @@ const MyParcels = () => {
       </div>
 
       {/* Parcel Table */}
-<div className="overflow-x-auto text-xs md:text-sm">
-
+      <div className="overflow-x-auto text-xs md:text-sm">
         <table className="table table-zebra w-full text-sm md:text-base">
-         <thead className="bg-base-200 font-semibold text-xs md:text-base">
-
+          <thead className="bg-base-200 font-semibold text-xs md:text-base">
             <tr className="h-14">
               <th>#</th>
               <th>Title</th>

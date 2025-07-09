@@ -34,9 +34,7 @@ async function run() {
     const paymentsCollection = db.collection("allPayments");
     const ridersCollection = db.collection("allRiders");
 
-
-
-  admin.initializeApp({
+    admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
 
@@ -130,6 +128,7 @@ async function run() {
       }
     });
 
+    // post an user to db
     app.post("/users", async (req, res) => {
       const { email, role, last_log_in, created_at } = req.body;
 
@@ -184,7 +183,6 @@ async function run() {
           { email },
           { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
         );
-
         return res.status(200).send({
           message: "User already exists, last_log_in updated",
           inserted: false,
@@ -208,6 +206,86 @@ async function run() {
         result: insertResult,
       });
     });
+
+    // Rider related api's
+    app.post("/riders", async (req, res) => {
+      const newRider = req.body;
+      const result = await ridersCollection.insertOne(newRider);
+      res.send(result);
+    });
+
+    // GET all pending riders
+    app.get("/pending", async (req, res) => {
+      try {
+        const pendingRiders = await ridersCollection
+          .find({
+            status: "pending",
+          })
+          .toArray();
+        res.send(pendingRiders);
+      } catch (error) {
+        console.error("Error fetching pending riders:", error);
+        res.status(500).send({ message: "Failed to load pending riders" });
+      }
+    });
+
+    app.delete("/riders/:id", async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await ridersCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to delete rider" });
+      }
+    });
+
+    app.patch("/riders/:id", async (req, res) => {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const allowedStatuses = ["approved", "rejected", "pending"];
+
+      // ✅ Validate status input
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).send({ message: "Invalid status value" });
+      }
+
+      try {
+        const result = await ridersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { status: status } }
+        );
+
+        if (result.modifiedCount === 0) {
+          return res
+            .status(404)
+            .send({ message: "Rider not found or status unchanged" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating rider status:", error);
+        res.status(500).send({ message: "Failed to update rider status" });
+      }
+    });
+
+
+app.get("/approved", async (req, res) => {
+  try {
+    const approvedRiders = await ridersCollection
+      .find({ status: "approved" })
+      .toArray();
+    res.send(approvedRiders);
+  } catch (error) {
+    console.error("Error fetching approved riders:", error);
+    res.status(500).send({ message: "Failed to load approved riders" });
+  }
+});
+
+
+
 
     // save payment in db
     app.post("/payments", verifyFireBaseToken, async (req, res) => {

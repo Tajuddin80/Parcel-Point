@@ -13,7 +13,7 @@ const BeARider = () => {
     formState: { errors },
   } = useForm();
   const { user } = useAuth();
-const axiosSecure = useAxiosSecure()
+  const axiosSecure = useAxiosSecure();
   const [warehouseData, setWarehouseData] = useState([]);
   const [regions, setRegions] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -58,28 +58,26 @@ const axiosSecure = useAxiosSecure()
     }
   }, [selectedDistrict, selectedRegion, warehouseData]);
 
-  const onSubmit = async(data) => {
-    const riderData ={
+  const onSubmit = async (data) => {
+
+
+    const riderData = {
       ...data,
+      photoURL: user?.photoURL,
       status: "pending",
-      created_at : new Date().toISOString()
-    }
-    console.log("Rider application data:", riderData).then(res=> {
+      created_at: new Date().toISOString(),
+    };
+    axiosSecure.post("/riders", riderData).then((res) => {
       if (res.data.insertedId) {
         Swal.fire({
           icon: "success",
           title: "Application Submitted",
           text: "Your application is pending approval",
-          showConfirmButton: false
-        })
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
-    })
-
-    axiosSecure.post('/riders', riderData)
-
-
-
-
+    });
   };
 
   return (
