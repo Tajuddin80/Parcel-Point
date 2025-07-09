@@ -6,7 +6,7 @@ const port = process.env.PORT || 3000;
 const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 const admin = require("firebase-admin");
-const serviceAccount = require("./parcel-point-firebase-key.json");
+const serviceAccount = require("./parcel-point-key.json");
 
 const client = new MongoClient(process.env.MONGODB_URI, {
   serverApi: {
@@ -31,8 +31,9 @@ async function run() {
     // all collections
     const parcelsCollection = db.collection("allParcels");
     const usersCollection = db.collection("allUsers");
-
     const paymentsCollection = db.collection("allPayments");
+    const ridersCollection = db.collection("allRiders");
+
 
 
   admin.initializeApp({

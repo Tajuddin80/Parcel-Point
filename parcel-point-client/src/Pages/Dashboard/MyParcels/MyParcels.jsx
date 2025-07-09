@@ -1,4 +1,3 @@
-
 import React from "react";
 import useAuth from "../../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +10,6 @@ import {
   FaMoneyBill,
   FaEye,
   FaTrash,
-  FaBarcode,
   FaWeightHanging,
 } from "react-icons/fa";
 
@@ -96,119 +94,127 @@ const MyParcels = () => {
       </div>
 
       {/* Parcel Table */}
-    <div className="overflow-x-auto rounded-lg shadow bg-base-100">
-  <table className="table table-zebra w-full text-sm md:text-base">
-    <thead className="bg-base-200 font-semibold text-base">
-      <tr className="h-14">
-        <th>#</th>
-        <th>Title</th>
-        <th>Type</th>
-        <th>Weight (kg)</th>
-        <th>Tracking ID</th>
-        <th>Payment</th>
-        <th>Cost (৳)</th>
-        <th>Created</th>
-        <th className="text-center">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {parcels.map((parcel, index) => (
-        <tr key={parcel._id} className="h-16 md:h-20">
-          <td>{index + 1}</td>
-          <td className="whitespace-nowrap">{parcel.parcelName}</td>
-          <td>{parcel.parcelType}</td>
-          <td>
-            <div className="flex items-center gap-1">
-              <FaWeightHanging /> {parcel.parcelWeight}
-            </div>
-          </td>
-          <td>
-            <div
-              className="tooltip cursor-pointer"
-              data-tip="Click to copy"
-              onClick={() => {
-                navigator.clipboard
-                  .writeText(parcel.trackingId)
-                  .then(() => {
-                    Swal.fire({
-                      title: "Copied!",
-                      text: `Tracking ID "${parcel.trackingId}" copied to clipboard.`,
-                      icon: "success",
-                      timer: 1500,
-                      showConfirmButton: false,
-                    });
-                  });
-              }}
-            >
-              <span className="badge badge-outline text-xs md:text-sm flex items-center gap-1">
-                {parcel.trackingId}
-              </span>
-            </div>
-          </td>
-          <td>
-            <span
-              className={`badge px-3 py-1 text-sm ${
-                parcel.paymentStatus === "paid"
-                  ? "badge-success"
-                  : "badge-error"
-              }`}
-            >
-              {parcel.paymentStatus === "paid" ? "Paid" : "Unpaid"}
-            </span>
-          </td>
-          <td>৳{parcel.totalCost}</td>
-          <td>{new Date(parcel.createdAt).toLocaleString()}</td>
-          <td>
-            <div className="flex flex-wrap gap-2 justify-start">
-              <button
-                className="btn btn-xs md:btn-sm btn-outline btn-info"
-                onClick={() => handleView(parcel)}
-              >
-                <FaEye className="mr-1" /> View
-              </button>
+<div className="overflow-x-auto text-xs md:text-sm">
 
-              {parcel.paymentStatus !== "paid" && (
-                <button
-                  className="btn btn-xs md:btn-sm btn-outline btn-success"
-                  onClick={() => handlePay(parcel)}
-                >
-                  <FaMoneyBill className="mr-1" /> Pay
-                </button>
-              )}
+        <table className="table table-zebra w-full text-sm md:text-base">
+         <thead className="bg-base-200 font-semibold text-xs md:text-base">
 
-              <button
-                className="btn btn-xs md:btn-sm btn-outline btn-warning"
-                onClick={() =>
-                  navigate(`/dashboard/trackParcel?track=${parcel.trackingId}`)
-                }
-              >
-                <FaTruck className="mr-1" /> Track
-              </button>
+            <tr className="h-14">
+              <th>#</th>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Weight (kg)</th>
+              <th>Tracking ID</th>
+              <th>Payment</th>
+              <th>Cost (৳)</th>
+              <th>Created</th>
+              <th className="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {parcels.map((parcel, index) => (
+              <tr key={parcel._id} className="h-16 md:h-20 text-xs md:text-sm">
+                <td>{index + 1}</td>
+                <td className="whitespace-nowrap max-w-[100px] md:max-w-none truncate">
+                  {parcel.parcelName}
+                </td>
+                <td>{parcel.parcelType}</td>
+                <td>
+                  <div className="flex items-center gap-1">
+                    <FaWeightHanging /> {parcel.parcelWeight}
+                  </div>
+                </td>
+                <td>
+                  <div
+                    className="tooltip cursor-pointer"
+                    data-tip="Click to copy"
+                    onClick={() => {
+                      navigator.clipboard
+                        .writeText(parcel.trackingId)
+                        .then(() => {
+                          Swal.fire({
+                            title: "Copied!",
+                            text: `Tracking ID "${parcel.trackingId}" copied to clipboard.`,
+                            icon: "success",
+                            timer: 1500,
+                            showConfirmButton: false,
+                          });
+                        });
+                    }}
+                  >
+                    <span className="badge badge-outline text-[10px] md:text-sm max-w-[100px] truncate inline-block">
+                      {parcel.trackingId}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <span
+                    className={`badge px-3 py-1 text-xs md:text-sm ${
+                      parcel.paymentStatus === "paid"
+                        ? "badge-success"
+                        : "badge-error"
+                    }`}
+                  >
+                    {parcel.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+                  </span>
+                </td>
+                <td>৳{parcel.totalCost}</td>
+                <td className="whitespace-nowrap">
+                  {new Date(parcel.createdAt).toLocaleString()}
+                </td>
+                <td>
+                  <div className="flex flex-wrap gap-1 md:gap-2 justify-start">
+                    <button
+                      className="btn btn-xs md:btn-sm btn-outline btn-info"
+                      onClick={() => handleView(parcel)}
+                    >
+                      <FaEye className="mr-1" /> View
+                    </button>
 
-              <button
-                className="btn btn-xs md:btn-sm btn-outline btn-error"
-                onClick={() => handleDelete(parcel)}
-              >
-                <FaTrash className="mr-1" /> Delete
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))}
-      {parcels.length === 0 && (
-        <tr>
-          <td colSpan="11" className="text-center text-gray-400 py-8">
-            You don’t have any parcels yet. <br />
-            <Link to={"/sendParcel"} className="btn btn-primary mt-10">
-              Send a Parcel
-            </Link>
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+                    <button
+                      className="btn btn-xs md:btn-sm btn-outline btn-success"
+                      onClick={() => handlePay(parcel)}
+                      disabled={parcel.paymentStatus === "paid"}
+                    >
+                      <FaMoneyBill className="mr-1" />
+                      {parcel.paymentStatus === "paid" ? "Paid" : "Pay"}
+                    </button>
 
+                    <button
+                      className="btn btn-xs md:btn-sm btn-outline btn-warning"
+                      onClick={() =>
+                        navigate(
+                          `/dashboard/trackParcel?track=${parcel.trackingId}`
+                        )
+                      }
+                    >
+                      <FaTruck className="mr-1" /> Track
+                    </button>
+
+                    <button
+                      className="btn btn-xs md:btn-sm btn-outline btn-error"
+                      onClick={() => handleDelete(parcel)}
+                    >
+                      <FaTrash className="mr-1" /> Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {parcels.length === 0 && (
+              <tr>
+                <td colSpan="11" className="text-center text-gray-400 py-8">
+                  You don’t have any parcels yet. <br />
+                  <Link to={"/sendParcel"} className="btn btn-primary mt-10">
+                    Send a Parcel
+                  </Link>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

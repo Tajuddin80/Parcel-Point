@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import riderImg from "../../assets/agent-pending.png";
+import useAuth from "../../hooks/useAuth";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
+import Swal from "sweetalert2";
 
 const BeARider = () => {
   const {
@@ -9,7 +12,8 @@ const BeARider = () => {
     watch,
     formState: { errors },
   } = useForm();
-
+  const { user } = useAuth();
+const axiosSecure = useAxiosSecure()
   const [warehouseData, setWarehouseData] = useState([]);
   const [regions, setRegions] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -54,8 +58,28 @@ const BeARider = () => {
     }
   }, [selectedDistrict, selectedRegion, warehouseData]);
 
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
+  const onSubmit = async(data) => {
+    const riderData ={
+      ...data,
+      status: "pending",
+      created_at : new Date().toISOString()
+    }
+    console.log("Rider application data:", riderData).then(res=> {
+      if (res.data.insertedId) {
+        Swal.fire({
+          icon: "success",
+          title: "Application Submitted",
+          text: "Your application is pending approval",
+          showConfirmButton: false
+        })
+      }
+    })
+
+    axiosSecure.post('/riders', riderData)
+
+
+
+
   };
 
   return (
@@ -83,6 +107,8 @@ const BeARider = () => {
                 Your Name
               </label>
               <input
+                value={user?.displayName || ""}
+                readOnly
                 {...register("name", { required: "Name is required" })}
                 className="input input-bordered w-full"
               />
@@ -98,7 +124,13 @@ const BeARider = () => {
               </label>
               <input
                 type="number"
-                {...register("age", { required: "Age is required" })}
+                {...register("age", {
+                  required: "Age is required",
+                  min: {
+                    value: 18,
+                    message: "You must be at least 18 years old",
+                  },
+                })}
                 className="input input-bordered w-full"
               />
               {errors.age && (
@@ -112,6 +144,8 @@ const BeARider = () => {
                 Your Email
               </label>
               <input
+                value={user?.email || ""}
+                readOnly
                 type="email"
                 {...register("email", {
                   required: "Email is required",
@@ -235,13 +269,49 @@ const BeARider = () => {
                 <p className="text-red-500 text-sm">{errors.contact.message}</p>
               )}
             </div>
+
+            {/* Bike Brand */}
+            <div>
+              <label className="block mb-1 text-sm font-medium text-[#03373D]">
+                Bike Brand
+              </label>
+              <input
+                {...register("bikeBrand", {
+                  required: "Bike brand is required",
+                })}
+                className="input input-bordered w-full"
+              />
+              {errors.bikeBrand && (
+                <p className="text-red-500 text-sm">
+                  {errors.bikeBrand.message}
+                </p>
+              )}
+            </div>
+
+            {/* Bike Registration Number */}
+            <div>
+              <label className="block mb-1 text-sm font-medium text-[#03373D]">
+                Bike Registration Number
+              </label>
+              <input
+                {...register("bikeRegNumber", {
+                  required: "Bike registration number is required",
+                })}
+                className="input input-bordered w-full"
+              />
+              {errors.bikeRegNumber && (
+                <p className="text-red-500 text-sm">
+                  {errors.bikeRegNumber.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <button
             type="submit"
             className="btn bg-[#D8F45D] text-black w-full mt-4"
           >
-            Submit
+            Appeal for Rider Position
           </button>
         </form>
 

@@ -7,7 +7,10 @@ import {
   FaMoneyCheckAlt,
   FaSearchLocation,
   FaUserEdit,
+  FaMotorcycle,
+  FaClock,
 } from "react-icons/fa";
+
 import Navbar from "../../Pages/shared/Navbar/Navbar";
 import Footer from "../../Pages/shared/Footer/Footer";
 
@@ -93,6 +96,16 @@ const DashboardLayout = () => {
             <li>
               <NavLink to="/dashboard/updateProfile" className={navLinkClass}>
                 <FaUserEdit /> Update Profile
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/dashboard/activeRiders" className={navLinkClass}>
+                <FaMotorcycle /> Active Riders
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/dashboard/pendingRiders" className={navLinkClass}>
+                <FaClock /> Pending Riders
               </NavLink>
             </li>
           </ul>

@@ -19,6 +19,8 @@ import PaymentHistory from "../Pages/Dashboard/PaymentHistory/PaymentHistory";
 import UpdateProfile from "../Pages/Dashboard/UpdateProfile/UpdateProfile";
 import TrackParcel from "../Pages/Dashboard/TrackParcel/TrackParcel";
 import Dashboard from "../Pages/Dashboard/Dashboard/Dasboard";
+import PendingRiders from "../Pages/Dashboard/PendingRiders/PendingRiders";
+import ActiveRiders from "../Pages/Dashboard/ActiveRiders/ActiveRiders";
 
 // Define loader function
 const homeLoader = async () => {
@@ -134,6 +136,14 @@ export const router = createBrowserRouter([
       {
         path: "trackParcel",
         element: <TrackParcel></TrackParcel>,
+      },
+      {
+        path: "activeRiders",
+        element: <ActiveRiders></ActiveRiders>,
+      },
+      {
+        path: "pendingRiders",
+        element: <PendingRiders></PendingRiders>,
       },
       {
         path: "updateProfile",
