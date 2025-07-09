@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import Loader from "../../shared/Loader/Loader";
+import useAuth from "../../../hooks/useAuth";
 
 const ActiveRiders = () => {
   const axiosSecure = useAxiosSecure();
-
+  const { user } = useAuth();
   const {
     data: approvedRiders = [],
     isLoading,
@@ -12,6 +14,7 @@ const ActiveRiders = () => {
     error,
   } = useQuery({
     queryKey: ["approvedRiders"],
+    enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get("/approved");
       return res.data;
@@ -19,11 +22,7 @@ const ActiveRiders = () => {
   });
 
   if (isLoading) {
-    return (
-      <div className="p-6 text-center text-lg font-medium text-blue-500">
-        Loading approved riders...
-      </div>
-    );
+    return <Loader></Loader>;
   }
 
   if (isError) {
@@ -35,17 +34,19 @@ const ActiveRiders = () => {
   }
 
   return (
-    <div className="">
-      <h2 className="text-3xl font-bold mb-6 text-center text-[#03373D]">
+    <div className="p-4 md:p-6">
+      <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-[#03373D]">
         Active Riders
       </h2>
 
       {approvedRiders.length === 0 ? (
-        <p className="text-center text-gray-500">No approved riders found.</p>
+        <p className="text-center text-gray-500 text-lg">
+          No approved riders found.
+        </p>
       ) : (
-        <div className="overflow-x-auto shadow border rounded-lg">
-          <table className="table w-full table-zebra text-sm">
-            <thead className="bg-[#03373D] text-white text-base">
+        <div className="overflow-x-auto rounded-xl border shadow">
+          <table className="table w-full table-zebra text-base md:text-lg">
+            <thead className="bg-[#03373D] text-white">
               <tr>
                 <th>#</th>
                 <th>Name</th>
@@ -68,7 +69,10 @@ const ActiveRiders = () => {
                   <td>{rider.district}</td>
                   <td>{rider.warehouse}</td>
                   <td>
-                    {rider.bikeBrand} ({rider.bikeRegNumber})
+                    {rider.bikeBrand} <br className="md:hidden" />
+                    <span className="text-sm text-gray-600">
+                      ({rider.bikeRegNumber})
+                    </span>
                   </td>
                 </tr>
               ))}

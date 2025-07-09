@@ -2,75 +2,73 @@ import React, { useState } from "react";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { useQuery } from "@tanstack/react-query";
+import Loader from "../../shared/Loader/Loader";
 
 const PendingRiders = () => {
   const [selectedRider, setSelectedRider] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const axiosSecure = useAxiosSecure();
 
-  // Fetch pending riders
   const {
     data: riders = [],
     isPending,
     refetch,
   } = useQuery({
     queryKey: ["pendingRiders"],
+  
     queryFn: async () => {
       const res = await axiosSecure.get("/pending");
       return res.data;
     },
   });
 
-  // Approve or Reject
- const handleDecision = async (riderId, action) => {
-  try {
-    let patchResponse;
-    let deleteResponse;
+  const handleDecision = async (riderId, action) => {
+    try {
+      let patchResponse;
+      let deleteResponse;
 
-    if (action === "approved") {
-      // Approve: update status only
-      patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
-        status: "approved",
-      });
+      if (action === "approved") {
+        patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
+          status: "approved",
+        });
 
-      if (patchResponse?.data?.modifiedCount > 0) {
-        Swal.fire("Rider approved!", "", "success");
-        refetch();
-        setModalOpen(false);
-      }
-    } else if (action === "rejected") {
-      //  Reject: update status then delete
-      patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
-        status: "rejected",
-      });
-
-      if (patchResponse?.data?.modifiedCount > 0) {
-        deleteResponse = await axiosSecure.delete(`/riders/${riderId}`);
-        if (deleteResponse?.data?.deletedCount > 0) {
-          Swal.fire("Rider rejected and deleted!", "", "success");
+        if (patchResponse?.data?.modifiedCount > 0) {
+          Swal.fire("Rider approved!", "", "success");
           refetch();
           setModalOpen(false);
         }
+      } else if (action === "rejected") {
+        patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
+          status: "rejected",
+        });
+
+        if (patchResponse?.data?.modifiedCount > 0) {
+          deleteResponse = await axiosSecure.delete(`/riders/${riderId}`);
+          if (deleteResponse?.data?.deletedCount > 0) {
+            Swal.fire("Rider rejected and deleted!", "", "success");
+            refetch();
+            setModalOpen(false);
+          }
+        }
       }
+    } catch (error) {
+      Swal.fire("Error", "Something went wrong!", "error");
     }
-  } catch (error) {
-    Swal.fire("Error", "Something went wrong!", "error");
+  };
+
+  if (isPending) {
+    return <Loader></Loader>;
   }
-};
-
-
-  if (isPending)
-    return <p className="p-6 text-center text-lg">Loading pending riders...</p>;
 
   return (
-    <div className="">
-      <h2 className="text-3xl font-bold mb-6 text-center text-[#03373D]">
+    <div className="p-4 md:p-6">
+      <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-[#03373D]">
         Pending Riders
       </h2>
 
       <div className="overflow-x-auto rounded-xl shadow border">
-        <table className="table table-zebra w-full text-sm">
-          <thead className="bg-[#03373D] text-white text-base">
+        <table className="table table-zebra w-full text-base md:text-lg">
+          <thead className="bg-[#03373D] text-white">
             <tr>
               <th>#</th>
               <th>Name</th>
@@ -94,7 +92,7 @@ const PendingRiders = () => {
                 <td>{rider.bikeBrand}</td>
                 <td>
                   <button
-                    className="btn btn-sm btn-info"
+                    className="btn btn-sm md:btn-md btn-info"
                     onClick={() => {
                       setSelectedRider(rider);
                       setModalOpen(true);
@@ -112,8 +110,8 @@ const PendingRiders = () => {
       {/* Modal */}
       {modalOpen && selectedRider && (
         <div className="fixed inset-0 backdrop-blur-md bg-white/40 flex items-center justify-center z-50 p-4 transition-all duration-300">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-2xl relative">
-            <h3 className="text-2xl font-bold mb-4 text-center text-[#03373D]">
+          <div className="bg-white rounded-xl p-6 w-full max-w-3xl shadow-2xl relative text-base md:text-lg">
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center text-[#03373D]">
               Rider Application
             </h3>
             <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -124,7 +122,7 @@ const PendingRiders = () => {
                 alt="Rider"
                 className="w-full md:w-1/2 rounded-xl shadow"
               />
-              <ul className="space-y-1 text-sm md:text-base w-full">
+              <ul className="space-y-1 w-full">
                 <li>
                   <strong>Name:</strong> {selectedRider.name}
                 </li>
@@ -165,7 +163,7 @@ const PendingRiders = () => {
               </ul>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3 flex-wrap">
+            <div className="mt-6 flex flex-wrap justify-end gap-4">
               <button
                 className="btn btn-success"
                 onClick={() => handleDecision(selectedRider._id, "approved")}

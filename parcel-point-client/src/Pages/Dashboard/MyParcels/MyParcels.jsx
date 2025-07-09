@@ -21,6 +21,7 @@ const MyParcels = () => {
   // Fetch user parcels
   const { data: parcels = [], refetch } = useQuery({
     queryKey: ["my-parcels", user?.email],
+      enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(`/parcels?email=${user?.email}`);
       return res.data;
@@ -96,7 +97,7 @@ const MyParcels = () => {
       {/* Parcel Table */}
       <div className="overflow-x-auto text-xs md:text-sm">
         <table className="table table-zebra w-full text-sm md:text-base">
-          <thead className="bg-base-200 font-semibold text-xs md:text-base">
+          <thead className="font-semibold text-xs text-white bg-[#03373D]">
             <tr className="h-14">
               <th>#</th>
               <th>Title</th>

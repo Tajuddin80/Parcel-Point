@@ -21,6 +21,7 @@ const PaymentForm = () => {
   // Use TanStack query to fetch parcel info
   const { isPending, data: parcelInfo = {} } = useQuery({
     queryKey: ["parcels", parcelId],
+      enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(`/parcels/${parcelId}`);
       return res.data;
