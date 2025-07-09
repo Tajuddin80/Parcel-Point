@@ -21,6 +21,7 @@ import TrackParcel from "../Pages/Dashboard/TrackParcel/TrackParcel";
 import Dashboard from "../Pages/Dashboard/Dashboard/Dasboard";
 import PendingRiders from "../Pages/Dashboard/PendingRiders/PendingRiders";
 import ActiveRiders from "../Pages/Dashboard/ActiveRiders/ActiveRiders";
+import MakeAdmin from "../Pages/Dashboard/MakeAdmin/MakeAdmin";
 
 // Define loader function
 const homeLoader = async () => {
@@ -153,6 +154,10 @@ export const router = createBrowserRouter([
       {
         path: "payment/:parcelId",
         element: <Payment></Payment>,
+      },
+      {
+        path: "makeAdmin",
+        element: <MakeAdmin></MakeAdmin>,
       },
     ],
   },

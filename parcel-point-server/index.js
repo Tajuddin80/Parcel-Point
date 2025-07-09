@@ -168,6 +168,30 @@ async function run() {
         result: insertResult,
       });
     });
+
+    app.get("/users/search", async (req, res) => {
+      const emailQuery = req.query.email; //  use query param
+
+      if (!emailQuery) {
+        return res.status(400).send({ message: "Missing email Query" });
+      }
+
+      const regex = new RegExp(emailQuery, "i"); // case-insensitive partial match
+
+      try {
+        const users = await usersCollection
+          .find({ email: { $regex: regex } })
+          .project({ email: 1, created_at: 1, role: 1 })
+          .limit(10)
+          .toArray();
+
+        res.send(users);
+      } catch (err) {
+        console.error("Error searching users", err);
+        res.status(500).send({ message: "Error Searching users" });
+      }
+    });
+
     app.post("/users", async (req, res) => {
       const { email, role, last_log_in, created_at } = req.body;
 
@@ -205,6 +229,31 @@ async function run() {
         inserted: true,
         result: insertResult,
       });
+    });
+
+    app.patch("/users/:id/role", async (req, res) => {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      if (!["admin", "user"].includes(role)) {
+        return res.status(400).send({ message: "invalid role" });
+      }
+
+      try {
+        const result = await usersCollection.updateOne(
+          {
+            _id: new ObjectId(id),
+          },
+          {
+            $set: { role },
+          }
+        );
+        res.send({ message: `User role updated to ${role}`, result });
+      } catch (error) {
+        console.error(error);
+
+        res.status(500).send({ message: "Failed to update user role" });
+      }
     });
 
     // Rider related api's

@@ -9,6 +9,7 @@ import {
   FaUserEdit,
   FaMotorcycle,
   FaClock,
+  FaUserShield,
 } from "react-icons/fa";
 
 import Navbar from "../../Pages/shared/Navbar/Navbar";
@@ -106,6 +107,11 @@ const DashboardLayout = () => {
             <li>
               <NavLink to="/dashboard/pendingRiders" className={navLinkClass}>
                 <FaClock /> Pending Riders
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/dashboard/makeAdmin" className={navLinkClass}>
+                <FaUserShield /> Make Admin
               </NavLink>
             </li>
           </ul>
