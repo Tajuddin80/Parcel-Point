@@ -27,7 +27,6 @@ const BeARider = () => {
       .then((res) => res.json())
       .then((data) => {
         setWarehouseData(data);
-
         const uniqueRegions = [...new Set(data.map((item) => item.region))];
         setRegions(uniqueRegions);
       });
@@ -59,25 +58,55 @@ const BeARider = () => {
   }, [selectedDistrict, selectedRegion, warehouseData]);
 
   const onSubmit = async (data) => {
-
-
     const riderData = {
       ...data,
       photoURL: user?.photoURL,
       status: "pending",
       created_at: new Date().toISOString(),
     };
-    axiosSecure.post("/riders", riderData).then((res) => {
+
+    try {
+      const res = await axiosSecure.post("/riders", riderData);
+
       if (res.data.insertedId) {
         Swal.fire({
           icon: "success",
           title: "Application Submitted",
-          text: "Your application is pending approval",
+          text: "Your application is pending approval.",
           showConfirmButton: false,
-          timer: 1500
+          timer: 2000,
         });
       }
-    });
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "Something went wrong!";
+      const status = error.response?.data?.status;
+
+      let icon = "error";
+      let title = "Submission Failed";
+      let text = errorMsg;
+
+      if (status === "pending") {
+        icon = "info";
+        title = "Already Applied";
+        text = "Your application is under review. Please wait for approval.";
+      } else if (status === "active") {
+        icon = "warning";
+        title = "Already a Rider";
+        text = "You're already an approved rider.";
+      } else if (status === "rejected") {
+        icon = "error";
+        title = "Application Rejected";
+        text =
+          "Your previous application was rejected. Please contact support.";
+      }
+
+      Swal.fire({
+        icon,
+        title,
+        text,
+        confirmButtonText: "OK",
+      });
+    }
   };
 
   return (

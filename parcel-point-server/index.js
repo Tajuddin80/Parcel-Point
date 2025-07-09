@@ -209,9 +209,37 @@ async function run() {
 
     // Rider related api's
     app.post("/riders", async (req, res) => {
+      const riderEmail = req.body.email;
       const newRider = req.body;
-      const result = await ridersCollection.insertOne(newRider);
-      res.send(result);
+
+      try {
+        const existingRider = await ridersCollection.findOne({
+          email: riderEmail,
+        });
+
+        if (existingRider) {
+          const status = existingRider.status;
+
+          const messages = {
+            pending: "Your application is already under review. Please wait.",
+            active: "You are already an approved rider.",
+            rejected:
+              "Your previous application was rejected. Please contact support or wait before reapplying.",
+          };
+
+          const message = messages[status] || "You have already applied.";
+
+          return res.status(400).send({ message, status });
+        }
+
+        const result = await ridersCollection.insertOne(newRider);
+        res.send(result);
+      } catch (error) {
+        console.error("Error inserting rider:", error);
+        res
+          .status(500)
+          .send({ message: "Server error while submitting application." });
+      }
     });
 
     // GET all pending riders
@@ -245,9 +273,9 @@ async function run() {
       const { id } = req.params;
       const { status } = req.body;
 
-      const allowedStatuses = ["approved", "rejected", "pending"];
+      const allowedStatuses = ["active", "rejected", "pending"];
 
-      // ✅ Validate status input
+      //  Validate status input
       if (!allowedStatuses.includes(status)) {
         return res.status(400).send({ message: "Invalid status value" });
       }
@@ -271,21 +299,17 @@ async function run() {
       }
     });
 
-
-app.get("/approved", async (req, res) => {
-  try {
-    const approvedRiders = await ridersCollection
-      .find({ status: "approved" })
-      .toArray();
-    res.send(approvedRiders);
-  } catch (error) {
-    console.error("Error fetching approved riders:", error);
-    res.status(500).send({ message: "Failed to load approved riders" });
-  }
-});
-
-
-
+    app.get("/approved", async (req, res) => {
+      try {
+        const approvedRiders = await ridersCollection
+          .find({ status: "active" })
+          .toArray();
+        res.send(approvedRiders);
+      } catch (error) {
+        console.error("Error fetching approved riders:", error);
+        res.status(500).send({ message: "Failed to load approved riders" });
+      }
+    });
 
     // save payment in db
     app.post("/payments", verifyFireBaseToken, async (req, res) => {

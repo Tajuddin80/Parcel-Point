@@ -23,38 +23,52 @@ const PendingRiders = () => {
   });
 
   const handleDecision = async (riderId, action) => {
-    try {
-      let patchResponse;
-      let deleteResponse;
+  const confirmResult = await Swal.fire({
+    title: `Are you sure you want to ${action} this rider?`,
+    text: action === "approved"
+      ? "The rider will be marked as active."
+      : "This rider will be rejected and deleted permanently!",
+    icon: action === "approved" ? "question" : "warning",
+    showCancelButton: true,
+    confirmButtonText: `Yes, ${action}`,
+    cancelButtonText: "Cancel",
+    confirmButtonColor: action === "approved" ? "#3085d6" : "#d33",
+  });
 
-      if (action === "approved") {
-        patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
-          status: "approved",
-        });
+  if (!confirmResult.isConfirmed) return;
 
-        if (patchResponse?.data?.modifiedCount > 0) {
-          Swal.fire("Rider approved!", "", "success");
+  try {
+    let patchResponse;
+    let deleteResponse;
+
+    if (action === "approved") {
+      patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
+        status: "active",
+      });
+
+      if (patchResponse?.data?.modifiedCount > 0) {
+        Swal.fire("Rider approved!", "", "success");
+        refetch();
+        setModalOpen(false);
+      }
+    } else if (action === "rejected") {
+      patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
+        status: "rejected",
+      });
+
+      if (patchResponse?.data?.modifiedCount > 0) {
+        deleteResponse = await axiosSecure.delete(`/riders/${riderId}`);
+        if (deleteResponse?.data?.deletedCount > 0) {
+          Swal.fire("Rider rejected and deleted!", "", "success");
           refetch();
           setModalOpen(false);
         }
-      } else if (action === "rejected") {
-        patchResponse = await axiosSecure.patch(`/riders/${riderId}`, {
-          status: "rejected",
-        });
-
-        if (patchResponse?.data?.modifiedCount > 0) {
-          deleteResponse = await axiosSecure.delete(`/riders/${riderId}`);
-          if (deleteResponse?.data?.deletedCount > 0) {
-            Swal.fire("Rider rejected and deleted!", "", "success");
-            refetch();
-            setModalOpen(false);
-          }
-        }
       }
-    } catch (error) {
-      Swal.fire("Error", "Something went wrong!", "error");
     }
-  };
+  } catch (error) {
+    Swal.fire("Error", "Something went wrong!", "error");
+  }
+};
 
   if (isPending) {
     return <Loader></Loader>;
