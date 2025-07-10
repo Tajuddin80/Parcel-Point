@@ -75,6 +75,20 @@ async function run() {
       }
       next();
     };
+    // verify rider role
+    const verifyRider = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+
+      // used just for checking
+      // if (!user || user.role === "admin") {
+
+      if (!user || user.role !== "rider") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
 
     // add parcels to the db
     app.post("/parcels", verifyFireBaseToken, async (req, res) => {
@@ -539,49 +553,92 @@ async function run() {
     });
 
     // get pending delivery task for rider
-    app.get("/rider-parcels", async (req, res) => {
-      try {
-        const { email } = req.query;
+    app.get(
+      "/rider-parcels",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        try {
+          const { email } = req.query;
 
-        if (!email) {
-          return res.status(400).send({ message: "Rider email is required." });
+          if (!email) {
+            return res
+              .status(400)
+              .send({ message: "Rider email is required." });
+          }
+
+          const riderParcels = await parcelsCollection
+            .find({
+              assignedRiderEmail: email,
+              deliveryStatus: { $in: ["rider_assigned", "in_transit"] },
+            })
+            .sort({ createdAt: -1 }) // Newest first
+            .toArray();
+
+          res.send(riderParcels);
+        } catch (error) {
+          console.error("Failed to fetch rider parcels:", error);
+          res
+            .status(500)
+            .send({ message: "Server error while fetching parcels." });
         }
-
-        const riderParcels = await parcelsCollection
-          .find({
-            assignedRiderEmail: email,
-            deliveryStatus: { $in: ["rider_assigned", "in_transit"] },
-          })
-          .sort({ createdAt: -1 }) // Newest first
-          .toArray();
-
-        res.send(riderParcels);
-      } catch (error) {
-        console.error("Failed to fetch rider parcels:", error);
-        res
-          .status(500)
-          .send({ message: "Server error while fetching parcels." });
       }
-    });
-
+    );
 
     // update the deliveryStatus by rider
-    app.patch("/rider-parcels/:id/status", async (req, res) => {
-      const { id } = req.params;
-      const { deliveryStatus } = req.body;
+    app.patch(
+      "/rider-parcels/:id/status",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        const { id } = req.params;
+        const { deliveryStatus } = req.body;
 
-      try {
-        const result = await parcelsCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: { deliveryStatus } }
-        );
+        try {
+          const result = await parcelsCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { deliveryStatus } }
+          );
 
-        res.send(result);
-      } catch (error) {
-        console.error("Failed to update parcel status:", error);
-        res.status(500).send({ message: "Failed to update parcel status." });
+          res.send(result);
+        } catch (error) {
+          console.error("Failed to update parcel status:", error);
+          res.status(500).send({ message: "Failed to update parcel status." });
+        }
       }
-    });
+    );
+
+    // load completed parcel deleveries for a rider
+    app.get(
+      "/rider-completed-parcels",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        try {
+          const { email } = req.query;
+          if (!email) {
+            return res.status(400).send({ message: "Rider email is required" });
+          }
+          const query = {
+            assignedRiderEmail: email,
+            deliveryStatus: { $in: ["delivered", "service_center_delivered"] },
+          };
+          const options = {
+            sort: { createdAt: -1 },
+          };
+
+          const completedParcels = await parcelsCollection
+            .find(query, options)
+            .toArray();
+          res.send(completedParcels);
+        } catch (error) {
+          console.error("Error loading completed parcels:", error);
+          res
+            .status(500)
+            .send({ message: "Failed to load completed deliveries" });
+        }
+      }
+    );
 
     // save payment in db
     app.post("/payments", verifyFireBaseToken, async (req, res) => {

@@ -12,6 +12,7 @@ import {
   FaUserShield,
   FaPeopleCarry,
   FaTasks,
+  FaCheckCircle,
 } from "react-icons/fa";
 
 import Navbar from "../../Pages/shared/Navbar/Navbar";
@@ -105,21 +106,28 @@ const DashboardLayout = () => {
                 <FaUserEdit /> Update Profile
               </NavLink>
             </li>
-{/* rider links */}
+            {/* rider links */}
 
-{
-  !isRoleLoading && role === "rider" && (
-    <>
-           <li>
-                  <NavLink to="/dashboard/pendingDeliveries" className={navLinkClass}>
+            {!isRoleLoading && role === "rider" && (
+              <>
+                <li>
+                  <NavLink
+                    to="/dashboard/pendingDeliveries"
+                    className={navLinkClass}
+                  >
                     <FaTasks /> Pending Deliveries
                   </NavLink>
                 </li>
-    
-    </>
-  )
-}
-
+                   <li>
+                  <NavLink
+                    to="/dashboard/completedDeliveries"
+                    className={navLinkClass}
+                  >
+                    <FaCheckCircle /> Completed Deliveries
+                  </NavLink>
+                </li>
+              </>
+            )}
 
             {/* admin links */}
 

@@ -27,6 +27,7 @@ import AdminRoute from "../Routes/AdminRoute";
 import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
 import PendingDeliveries from "../Pages/Dashboard/PendingDeliveries/PendingDeliveries";
 import RiderRoute from "../Routes/RiderRoutes";
+import CompletedDeliveries from "../Pages/Dashboard/CompletedDeliveries/CompletedDeliveries";
 
 // Define loader function
 const homeLoader = async () => {
@@ -165,6 +166,15 @@ export const router = createBrowserRouter([
         element: (
           <RiderRoute>
             <PendingDeliveries></PendingDeliveries>
+          </RiderRoute>
+        ),
+      },
+
+      {
+        path: "completedDeliveries",
+        element: (
+          <RiderRoute>
+            <CompletedDeliveries></CompletedDeliveries>
           </RiderRoute>
         ),
       },
