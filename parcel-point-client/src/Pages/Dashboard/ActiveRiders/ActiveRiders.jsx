@@ -20,7 +20,8 @@ const ActiveRiders = () => {
     queryKey: ["approvedRiders"],
     enabled: !!user?.email,
     queryFn: async () => {
-      const res = await axiosSecure.get("/approved");
+     const res = await axiosSecure.get("/riders?status=active");
+
       return res.data;
     },
   });

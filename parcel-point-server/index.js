@@ -143,6 +143,52 @@ async function run() {
       }
     });
 
+    app.patch(
+      "/parcels/:id/status",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        const { deliveryStatus } = req.body;
+
+        if (
+          !["not_collected", "in-transit", "delivered"].includes(deliveryStatus)
+        ) {
+          return res.status(400).send({ message: "Invalid delivery status" });
+        }
+
+        try {
+          const result = await parcelsCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { deliveryStatus } }
+          );
+
+          res.send({ message: "Parcel updated", result });
+        } catch (err) {
+          res.status(500).send({ message: "Failed to update parcel" });
+        }
+      }
+    );
+
+    // GET /parcels?status=assignable paid but not collected
+    app.get("/parcels", verifyFireBaseToken, verifyAdmin, async (req, res) => {
+      const { status } = req.query;
+
+      let query = {};
+      if (status === "assignable") {
+        query.deliveryStatus = "not_collected";
+        query.paymentStatus = "paid";
+      }
+
+      try {
+        const parcels = await parcelsCollection.find(query).toArray();
+        res.send(parcels);
+      } catch (err) {
+        console.error("Failed to fetch parcels", err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     // post an user to db
     app.post("/users", async (req, res) => {
       const { email, role, last_log_in, created_at } = req.body;
@@ -381,23 +427,33 @@ async function run() {
         const { id } = req.params;
         const { status, email } = req.body;
 
-        const allowedStatuses = ["active", "rejected", "pending"];
+        const allowedStatuses = [
+          "active",
+          "rejected",
+          "pending",
+          "in-delivery",
+        ];
 
-        // Validate status input
         if (!allowedStatuses.includes(status)) {
           return res.status(400).send({ message: "Invalid status value" });
         }
 
         try {
-          // Update rider's status
+          // Update rider status
           const result = await ridersCollection.updateOne(
             { _id: new ObjectId(id) },
             { $set: { status } }
           );
 
-          // Now update user role based on status
+          if (result.modifiedCount === 0) {
+            return res
+              .status(404)
+              .send({ message: "Rider not found or status unchanged" });
+          }
+
+          // Conditionally update user role
           const userQuery = { email };
-          let userUpdateDoc = {};
+          let userUpdateDoc = null;
 
           if (status === "active") {
             userUpdateDoc = { $set: { role: "rider" } };
@@ -405,17 +461,12 @@ async function run() {
             userUpdateDoc = { $set: { role: "user" } };
           }
 
-          const roleResult = await usersCollection.updateOne(
-            userQuery,
-            userUpdateDoc
-          );
-
-          console.log("User role update result:", roleResult.modifiedCount);
-
-          if (result.modifiedCount === 0) {
-            return res
-              .status(404)
-              .send({ message: "Rider not found or status unchanged" });
+          if (userUpdateDoc) {
+            const roleResult = await usersCollection.updateOne(
+              userQuery,
+              userUpdateDoc
+            );
+            console.log("User role update result:", roleResult.modifiedCount);
           }
 
           res.send({
@@ -429,34 +480,21 @@ async function run() {
       }
     );
 
-    app.get("/approved", verifyFireBaseToken, verifyAdmin, async (req, res) => {
-      try {
-        const approvedRiders = await ridersCollection
-          .find({ status: "active" })
-          .toArray();
-        res.send(approvedRiders);
-      } catch (error) {
-        console.error("Error fetching approved riders:", error);
-        res.status(500).send({ message: "Failed to load approved riders" });
-      }
-    });
-
-    // GET /parcels?status=assignable
-    app.get("/parcels", verifyFireBaseToken, verifyAdmin, async (req, res) => {
+    // Cleaner and secure since verifyAdmin is already checking the role
+    app.get("/riders", verifyFireBaseToken, verifyAdmin, async (req, res) => {
       const { status } = req.query;
+      const query = {};
 
-      let query = {};
-      if (status === "assignable") {
-        query.deliveryStatus = "not_collected";
-        query.paymentStatus = "paid";
+      if (status) {
+        query.status = status;
       }
 
       try {
-        const parcels = await parcelsCollection.find(query).toArray();
-        res.send(parcels);
+        const riders = await ridersCollection.find(query).toArray();
+        res.send(riders);
       } catch (err) {
-        console.error("Failed to fetch parcels", err);
-        res.status(500).send({ message: "Server error" });
+        console.error("Error fetching riders", err);
+        res.status(500).send({ message: "Failed to load riders" });
       }
     });
 
