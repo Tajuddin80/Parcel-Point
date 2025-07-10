@@ -22,6 +22,8 @@ import Dashboard from "../Pages/Dashboard/Dashboard/Dasboard";
 import PendingRiders from "../Pages/Dashboard/PendingRiders/PendingRiders";
 import ActiveRiders from "../Pages/Dashboard/ActiveRiders/ActiveRiders";
 import MakeAdmin from "../Pages/Dashboard/MakeAdmin/MakeAdmin";
+import Forbidden from "../Pages/Forbidden/Forbidden";
+import AdminRoute from "../Routes/AdminRoute";
 
 // Define loader function
 const homeLoader = async () => {
@@ -50,6 +52,10 @@ export const router = createBrowserRouter([
           <PricingCalculator />
           // </PrivateRoute>
         ),
+      },
+      {
+        path: "forbidden",
+        element: <Forbidden></Forbidden>,
       },
 
       {
@@ -157,7 +163,10 @@ export const router = createBrowserRouter([
       },
       {
         path: "makeAdmin",
-        element: <MakeAdmin></MakeAdmin>,
+        element:
+        <AdminRoute>
+<MakeAdmin></MakeAdmin>
+        </AdminRoute> 
       },
     ],
   },
