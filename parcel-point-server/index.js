@@ -77,7 +77,7 @@ async function run() {
     };
 
     // add parcels to the db
-    app.post("/parcels",verifyFireBaseToken, async (req, res) => {
+    app.post("/parcels", verifyFireBaseToken, async (req, res) => {
       try {
         const newOrder = req.body;
         const result = await parcelsCollection.insertOne(newOrder);
@@ -105,7 +105,7 @@ async function run() {
     });
 
     // delete parcel
-    app.delete("/parcels/:id", async (req, res) => {
+    app.delete("/parcels/:id", verifyFireBaseToken, async (req, res) => {
       const parcelId = req.params.id;
 
       try {
@@ -143,133 +143,79 @@ async function run() {
       }
     });
 
-    // app.patch(
-    //   "/parcels/:id/status",
-    //   verifyFireBaseToken,
-    //   verifyAdmin,
-    //   async (req, res) => {
-    //     const { id } = req.params;
-    //     const { deliveryStatus } = req.body;
+    // PATCH: Assign a rider to a parcel
+    app.patch("/assign", verifyFireBaseToken, verifyAdmin, async (req, res) => {
+      const { parcelId, riderId, riderEmail } = req.body;
 
-    //     if (
-    //       !["not_collected", "in-transit", "delivered"].includes(deliveryStatus)
-    //     ) {
-    //       return res.status(400).send({ message: "Invalid delivery status" });
-    //     }
-
-    //     try {
-    //       const result = await parcelsCollection.updateOne(
-    //         { _id: new ObjectId(id) },
-    //         { $set: { deliveryStatus } }
-    //       );
-
-    //       res.send({ message: "Parcel updated", result });
-    //     } catch (err) {
-    //       res.status(500).send({ message: "Failed to update parcel" });
-    //     }
-    //   }
-    // );
-
-
-// PATCH: Assign a rider to a parcel
-
-
-app.patch(
-  "/assign",
-  verifyFireBaseToken,
-  verifyAdmin,
-  async (req, res) => {
-    const { parcelId, riderId, riderEmail } = req.body;
-
-    if (!parcelId || !riderId || !riderEmail) {
-      return res.status(400).send({ message: "Missing assignment details" });
-    }
-
-    try {
-      // 1. Update parcel: deliveryStatus + rider info
-      const parcelUpdate = await parcelsCollection.updateOne(
-        { _id: new ObjectId(parcelId) },
-        {
-          $set: {
-            deliveryStatus: "in-transit",
-            assignedRider: {
-              id: riderId,
-              email: riderEmail,
-            },
-          },
-        }
-      );
-
-      // 2. Update rider status
-      const riderUpdate = await ridersCollection.updateOne(
-        { _id: new ObjectId(riderId) },
-        { $set: { status: "in-delivery" } }
-      );
-
-      if (parcelUpdate.modifiedCount === 0 || riderUpdate.modifiedCount === 0) {
-        return res
-          .status(404)
-          .send({ message: "Failed to assign rider or update status" });
+      if (!parcelId || !riderId || !riderEmail) {
+        return res.status(400).send({ message: "Missing assignment details" });
       }
 
-      res.send({ message: "Rider assigned to parcel successfully" });
-    } catch (err) {
-      console.error("Assignment failed:", err);
-      res.status(500).send({ message: "Assignment failed" });
-    }
-  }
-);
+      try {
+        // 1. Update parcel: deliveryStatus + rider info
+        const parcelUpdate = await parcelsCollection.updateOne(
+          { _id: new ObjectId(parcelId) },
+          {
+            $set: {
+              deliveryStatus: "in-transit",
+              assignedRider: {
+                id: riderId,
+                email: riderEmail,
+              },
+            },
+          }
+        );
 
+        // 2. Update rider status
+        const riderUpdate = await ridersCollection.updateOne(
+          { _id: new ObjectId(riderId) },
+          { $set: { status: "in-delivery" } }
+        );
 
+        if (
+          parcelUpdate.modifiedCount === 0 ||
+          riderUpdate.modifiedCount === 0
+        ) {
+          return res
+            .status(404)
+            .send({ message: "Failed to assign rider or update status" });
+        }
 
+        res.send({ message: "Rider assigned to parcel successfully" });
+      } catch (err) {
+        console.error("Assignment failed:", err);
+        res.status(500).send({ message: "Assignment failed" });
+      }
+    });
 
     // GET /parcels?status=assignable paid but not collected
-app.get("/parcels/assignable", verifyFireBaseToken, async (req, res) => {
-  try {
-    console.log("Received request for assignable parcels");
+    app.get(
+      "/parcels/assignable",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          console.log("Received request for assignable parcels");
 
-    // Log database connection and collection info
-    // console.log("parcelCollection:", parcelsCollection ? "OK" : "NOT OK");
+          // Log database connection and collection info
+          // console.log("parcelCollection:", parcelsCollection ? "OK" : "NOT OK");
 
-    const parcels = await parcelsCollection.find({
-      deliveryStatus: "not_collected",
-      paymentStatus: "paid",
-    }).toArray();
+          const parcels = await parcelsCollection
+            .find({
+              deliveryStatus: "not_collected",
+              paymentStatus: "paid",
+            })
+            .toArray();
 
-    // console.log("Found parcels:", parcels.length);
+          // console.log("Found parcels:", parcels.length);
 
-    res.send(parcels);
-  } catch (error) {
-    console.error("Error fetching assignable parcels:", error);
-    res.status(500).send({ message: "Internal server error" });
-  }
-});
-
-// app.get("/parcels/assignable", verifyFireBaseToken, async (req, res) => {
-//   try {
-//     console.log("🟢 Received request for assignable parcels");
-//     console.log("🟢 Authorization:", req.headers.authorization);
-
-//     const parcels = await parcelsCollection.find({
-//       deliveryStatus: "not_collected",
-//       paymentStatus: "paid",
-//     }).toArray();
-
-//     console.log("🟢 Found parcels:", parcels.length);
-
-//     res.send(parcels);
-//   } catch (error) {
-//     console.error("🔴 Error fetching assignable parcels:", error.stack || error);
-//     res.status(500).send({ message: "Internal server error" });
-//   }
-// });
-
-
-
-
-
-
-
+          res.send(parcels);
+        } catch (error) {
+          console.error("Error fetching assignable parcels:", error);
+          res.status(500).send({ message: "Internal server error" });
+        }
+      }
+    );
 
     // post an user to db
     app.post("/users", async (req, res) => {
