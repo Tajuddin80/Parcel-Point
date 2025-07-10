@@ -538,6 +538,31 @@ async function run() {
       }
     });
 
+
+    // get pending delivery task for rider
+    app.get("/rider-parcels", async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).send({ message: "Rider email is required." });
+    }
+
+    const riderParcels = await parcelsCollection
+      .find({
+        assignedRiderEmail: email,
+        deliveryStatus: { $in: ["rider_assigned", "in_transit"] },
+      })
+      .sort({ createdAt: -1 }) // Newest first
+      .toArray();
+
+    res.send(riderParcels);
+  } catch (error) {
+    console.error("Failed to fetch rider parcels:", error);
+    res.status(500).send({ message: "Server error while fetching parcels." });
+  }
+});
+
     // save payment in db
     app.post("/payments", verifyFireBaseToken, async (req, res) => {
       const payment = req.body;
