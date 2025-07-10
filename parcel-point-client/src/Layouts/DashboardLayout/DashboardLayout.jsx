@@ -14,6 +14,7 @@ import {
 
 import Navbar from "../../Pages/shared/Navbar/Navbar";
 import Footer from "../../Pages/shared/Footer/Footer";
+import useUserRole from "../../hooks/useUserRole";
 
 const navLinkClass = ({ isActive }) =>
   `flex items-center gap-2 px-3 py-2 rounded ${
@@ -22,6 +23,9 @@ const navLinkClass = ({ isActive }) =>
       : "hover:bg-[#CAEB66]  text-base md:text-lg rounded"
   }`;
 const DashboardLayout = () => {
+  const { role, isRoleLoading } = useUserRole();
+  console.log(role);
+
   return (
     <>
       {/* <Navbar></Navbar> */}
@@ -99,21 +103,34 @@ const DashboardLayout = () => {
                 <FaUserEdit /> Update Profile
               </NavLink>
             </li>
-            <li>
-              <NavLink to="/dashboard/activeRiders" className={navLinkClass}>
-                <FaMotorcycle /> Active Riders
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/dashboard/pendingRiders" className={navLinkClass}>
-                <FaClock /> Pending Riders
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/dashboard/makeAdmin" className={navLinkClass}>
-                <FaUserShield /> Make Admin
-              </NavLink>
-            </li>
+
+            {/* admin links */}
+
+            {!isRoleLoading && role === "admin" && (
+              <>
+                <li>
+                  <NavLink
+                    to="/dashboard/activeRiders"
+                    className={navLinkClass}
+                  >
+                    <FaMotorcycle /> Active Riders
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/dashboard/pendingRiders"
+                    className={navLinkClass}
+                  >
+                    <FaClock /> Pending Riders
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/dashboard/makeAdmin" className={navLinkClass}>
+                    <FaUserShield /> Make Admin
+                  </NavLink>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>

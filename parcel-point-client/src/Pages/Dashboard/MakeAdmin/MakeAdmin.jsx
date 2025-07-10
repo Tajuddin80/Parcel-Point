@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import Loader from "../../shared/Loader/Loader";
 
 const MakeAdmin = () => {
   const axiosSecure = useAxiosSecure();
@@ -9,7 +10,11 @@ const MakeAdmin = () => {
   const [searchEmail, setSearchEmail] = useState("");
 
   // Query to search users by email
-  const { data: users = [], refetch, isFetching } = useQuery({
+  const {
+    data: users = [],
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["searchUsers", searchEmail],
     enabled: !!searchEmail,
     queryFn: async () => {
@@ -33,9 +38,21 @@ const MakeAdmin = () => {
     },
   });
 
-  const handleRoleChange = (id, newRole) => {
-    updateRole({ id, role: newRole });
-  };
+const handleRoleChange = (id, newRole) => {
+  Swal.fire({
+    title: `Are you sure?`,
+    text: `You are about to make this user a ${newRole.toUpperCase()}.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, update role!",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      updateRole({ id, role: newRole });
+    }
+  });
+};
 
   return (
     <section className="p-6 bg-white rounded-xl shadow-md">
@@ -53,7 +70,7 @@ const MakeAdmin = () => {
       </div>
 
       {/* Loading State */}
-      {isFetching && <p>Searching users...</p>}
+      {isFetching && <Loader></Loader>}
 
       {/* User List */}
       {users.length > 0 ? (
@@ -63,6 +80,7 @@ const MakeAdmin = () => {
               <tr>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Created Account</th>
                 <th>Set As</th>
               </tr>
             </thead>
@@ -71,6 +89,15 @@ const MakeAdmin = () => {
                 <tr key={user._id}>
                   <td>{user.email}</td>
                   <td>{user.role}</td>
+                  <td>
+                    {user.created_at
+                      ? new Date(user.created_at).toLocaleString("en-US", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })
+                      : "N/A"}
+                  </td>
+
                   <td className="space-x-2">
                     {user.role !== "admin" && (
                       <button

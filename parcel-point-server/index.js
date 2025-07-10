@@ -169,6 +169,8 @@ async function run() {
       });
     });
 
+
+    // Get user by email search
     app.get("/users/search", async (req, res) => {
       const emailQuery = req.query.email; //  use query param
 
@@ -189,6 +191,24 @@ async function run() {
       } catch (err) {
         console.error("Error searching users", err);
         res.status(500).send({ message: "Error Searching users" });
+      }
+    });
+
+    // Get role by email
+    app.get("/users/:email/role", async (req, res) => {
+      try {
+        const email = req.params.email;
+        if (!email) {
+          return res.status(400).send({ message: "Email is required" });
+        }
+        const user = await usersCollection.findOne({ email });
+        if (!user) {
+          return res.status(400).send({ message: "user not found" });
+        }
+        res.send({ role: user.role || "user" });
+      } catch (error) {
+        console.error("Error getting the role: ", error)
+        res.status(500).send({message: "Failed to get role"})
       }
     });
 
