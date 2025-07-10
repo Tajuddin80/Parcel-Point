@@ -2,7 +2,7 @@ import { Outlet } from "react-router";
 import Footer from "../../Pages/shared/Footer/Footer";
 import Navbar from "../../Pages/shared/Navbar/Navbar";
 
-const RootLayout = () => {
+const HomeLayout = () => {
   return (
     <div className="flex flex-col min-h-[150vh]">
       <div>
@@ -18,4 +18,4 @@ const RootLayout = () => {
   );
 };
 
-export default RootLayout;
+export default HomeLayout;

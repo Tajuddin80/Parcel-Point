@@ -8,17 +8,20 @@ const MakeAdmin = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
   const [searchEmail, setSearchEmail] = useState("");
+  const [searchRole, setSearchRole] = useState(""); // New role filter state
 
-  // Query to search users by email
+  // Query to search users by email and role
   const {
     data: users = [],
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ["searchUsers", searchEmail],
-    enabled: !!searchEmail,
+    queryKey: ["searchUsers", searchEmail, searchRole],
+    enabled: !!searchEmail || !!searchRole,
     queryFn: async () => {
-      const res = await axiosSecure.get(`/users/search?email=${searchEmail}`);
+      const res = await axiosSecure.get(
+        `/users/search?email=${searchEmail}&role=${searchRole}`
+      );
       return res.data;
     },
   });
@@ -58,8 +61,9 @@ const MakeAdmin = () => {
     <section className="p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-bold text-[#03373D] mb-4">Make Admin</h2>
 
-      {/* Search Box */}
-      <div className="mb-4">
+      {/* Filters */}
+      <div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-4">
+        {/* Email Search */}
         <input
           type="text"
           placeholder="Search by email..."
@@ -67,10 +71,22 @@ const MakeAdmin = () => {
           value={searchEmail}
           onChange={(e) => setSearchEmail(e.target.value)}
         />
+
+        {/* Role Filter */}
+        <select
+          className="select select-bordered"
+          value={searchRole}
+          onChange={(e) => setSearchRole(e.target.value)}
+        >
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="rider">Rider</option>
+          <option value="user">User</option>
+        </select>
       </div>
 
       {/* Loading State */}
-      {isFetching && <Loader></Loader>}
+      {isFetching && <Loader />}
 
       {/* User List */}
       {users.length > 0 ? (
@@ -97,7 +113,6 @@ const MakeAdmin = () => {
                         })
                       : "N/A"}
                   </td>
-
                   <td className="space-x-2">
                     {user.role !== "admin" && (
                       <button
@@ -124,7 +139,7 @@ const MakeAdmin = () => {
           </table>
         </div>
       ) : (
-        searchEmail &&
+        (searchEmail || searchRole) &&
         !isFetching && <p className="text-gray-500">No matching users found.</p>
       )}
     </section>

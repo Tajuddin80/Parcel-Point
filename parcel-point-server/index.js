@@ -60,11 +60,18 @@ async function run() {
         return res.status(403).send({ message: "forbidden access" });
       }
     };
+
+
+
+
     // verify admin role
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email };
       const user = await usersCollection.findOne(query);
+
+      // used just for checking
+      // if (!user || user.role === "admin") {
 
       if (!user || user.role !== "admin") {
         return res.status(403).send({ message: "forbidden access" });
@@ -181,28 +188,39 @@ async function run() {
     });
 
     // Get user by email search
-    app.get("/users/search", async (req, res) => {
-      const emailQuery = req.query.email; //  use query param
+// Get users by email and/or role
+app.get("/users/search", async (req, res) => {
+  const { email = "", role = "" } = req.query;
 
-      if (!emailQuery) {
-        return res.status(400).send({ message: "Missing email Query" });
-      }
+  // If neither email nor role is provided
+  if (!email && !role) {
+    return res.status(400).send({ message: "Missing email or role query" });
+  }
 
-      const regex = new RegExp(emailQuery, "i"); // case-insensitive partial match
+  const query = {};
 
-      try {
-        const users = await usersCollection
-          .find({ email: { $regex: regex } })
-          .project({ email: 1, created_at: 1, role: 1 })
-          .limit(10)
-          .toArray();
+  if (email) {
+    const regex = new RegExp(email, "i"); // case-insensitive partial match
+    query.email = { $regex: regex };
+  }
 
-        res.send(users);
-      } catch (err) {
-        console.error("Error searching users", err);
-        res.status(500).send({ message: "Error Searching users" });
-      }
-    });
+  if (role) {
+    query.role = role;
+  }
+
+  try {
+    const users = await usersCollection
+      .find(query)
+      .project({ email: 1, created_at: 1, role: 1 })
+      .limit(10)
+      .toArray();
+
+    res.send(users);
+  } catch (err) {
+    console.error("Error searching users", err);
+    res.status(500).send({ message: "Error searching users" });
+  }
+});
 
     // Get role by email
     app.get("/users/:email/role", async (req, res) => {

@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import HomeLayout from "../Layouts/RootLayout/RootLayout";
+import HomeLayout from "../Layouts/HomeLayout/HomeLayout";
 import Home from "../Pages/Home/Home/Home";
 import AboutUs from "../Pages/AboutUs/AboutUs/AboutUs";
 import BeARider from "../Pages/BeARider/BeARider";
@@ -144,7 +144,7 @@ export const router = createBrowserRouter([
         path: "trackParcel",
         element: <TrackParcel></TrackParcel>,
       },
-  
+
       {
         path: "updateProfile",
         element: <UpdateProfile></UpdateProfile>,
@@ -164,7 +164,7 @@ export const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-          {
+      {
         path: "activeRiders",
         element: (
           <AdminRoute>
