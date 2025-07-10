@@ -77,7 +77,7 @@ const PendingRiders = () => {
   }
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="">
       <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-[#03373D]">
         Pending Riders
       </h2>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
@@ -13,22 +13,26 @@ import {
 const AssignRider = () => {
   const axiosSecure = useAxiosSecure();
   const [selectedParcel, setSelectedParcel] = useState(null);
+  const queryClient = useQueryClient();
 
-  // Get parcels that are paid but not yet collected
+  // Fetch assignable parcels from new endpoint
   const {
     data: parcels = [],
     isLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["assignableParcels"],
     queryFn: async () => {
-      const res = await axiosSecure.get("/parcels?status=assignable");
+      const res = await axiosSecure.get("/parcels/assignable");
+      console.log(res.data);
+
       return res.data;
     },
   });
 
-  // Get all active riders
+  // Fetch active riders
   const { data: riders = [], isLoading: ridersLoading } = useQuery({
     queryKey: ["activeRidersForAssignment"],
     queryFn: async () => {
@@ -45,9 +49,9 @@ const AssignRider = () => {
     setSelectedParcel(null);
   };
 
+  // Filter riders matching the parcel's sender location
   const getMatchingRiders = () => {
     if (!selectedParcel || !riders) return [];
-
     return riders.filter((rider) => {
       return (
         rider.region === selectedParcel.senderRegion ||
@@ -68,7 +72,7 @@ const AssignRider = () => {
     );
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="">
       <h2 className="text-3xl font-bold text-center text-[#03373D] mb-6">
         Parcels Ready to Assign Riders
       </h2>
@@ -123,7 +127,7 @@ const AssignRider = () => {
 
       {/* Modal */}
       {selectedParcel && (
-        <div className="fixed inset-0  backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/20 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
             <h3 className="text-2xl font-semibold mb-4 text-[#03373D]">
               Assign Rider for: {selectedParcel.trackingId}
@@ -164,18 +168,10 @@ const AssignRider = () => {
 
                         if (confirm.isConfirmed) {
                           try {
-                            // 1. Update parcel delivery status
-                            await axiosSecure.patch(
-                              `/parcels/${selectedParcel._id}/status`,
-                              {
-                                deliveryStatus: "in-transit",
-                              }
-                            );
-
-                            // 2. Update rider status
-                            await axiosSecure.patch(`/riders/${rider._id}`, {
-                              status: "in-delivery",
-                              email: rider.email, // If your backend requires it
+                            await axiosSecure.patch("/assign", {
+                              parcelId: selectedParcel._id,
+                              riderId: rider._id,
+                              riderEmail: rider.email,
                             });
 
                             Swal.fire(
@@ -184,10 +180,12 @@ const AssignRider = () => {
                               "success"
                             );
 
-                            // Optionally refetch parcels
-                            // queryClient.invalidateQueries(["assignableParcels"]);
+                            // Refetch assignable parcels list
+                            await queryClient.invalidateQueries([
+                              "assignableParcels",
+                            ]);
+                            refetch();
 
-                            // Close modal
                             closeModal();
                           } catch (err) {
                             console.error(err);
