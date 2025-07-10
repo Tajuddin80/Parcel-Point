@@ -377,53 +377,61 @@ app.get("/users/search", async (req, res) => {
     );
 
     app.patch(
-      "/riders/:id",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req, res) => {
-        const { id } = req.params;
-        const { status, email } = req.body;
+  "/riders/:id",
+  verifyFireBaseToken,
+  verifyAdmin,
+  async (req, res) => {
+    const { id } = req.params;
+    const { status, email } = req.body;
 
-        const allowedStatuses = ["active", "rejected", "pending"];
+    const allowedStatuses = ["active", "rejected", "pending"];
 
-        //  Validate status input
-        if (!allowedStatuses.includes(status)) {
-          return res.status(400).send({ message: "Invalid status value" });
-        }
+    // Validate status input
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).send({ message: "Invalid status value" });
+    }
 
-        try {
-          const result = await ridersCollection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { status: status } }
-          );
-          // update user role for accepting rider
-          if (status === "active") {
-            const userQuery = { email };
-            const userUpdateDoc = {
-              $set: {
-                role: "rider",
-              },
-            };
-            const roleResult = await usersCollection.updateOne(
-              userQuery,
-              userUpdateDoc
-            );
-            console.log(roleResult.modifiedCount);
-          }
+    try {
+      // Update rider's status
+      const result = await ridersCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { status } }
+      );
 
-          if (result.modifiedCount === 0) {
-            return res
-              .status(404)
-              .send({ message: "Rider not found or status unchanged" });
-          }
+      // Now update user role based on status
+      const userQuery = { email };
+      let userUpdateDoc = {};
 
-          res.send(result);
-        } catch (error) {
-          console.error("Error updating rider status:", error);
-          res.status(500).send({ message: "Failed to update rider status" });
-        }
+      if (status === "active") {
+        userUpdateDoc = { $set: { role: "rider" } };
+      } else if (status === "rejected" || status === "pending") {
+        userUpdateDoc = { $set: { role: "user" } };
       }
-    );
+
+      const roleResult = await usersCollection.updateOne(
+        userQuery,
+        userUpdateDoc
+      );
+
+      console.log("User role update result:", roleResult.modifiedCount);
+
+      if (result.modifiedCount === 0) {
+        return res
+          .status(404)
+          .send({ message: "Rider not found or status unchanged" });
+      }
+
+      res.send({
+        message: `Rider status updated to ${status}`,
+        result,
+      });
+    } catch (error) {
+      console.error("Error updating rider status:", error);
+      res.status(500).send({ message: "Failed to update rider status" });
+    }
+  }
+);
+
 
     app.get("/approved", verifyFireBaseToken, verifyAdmin, async (req, res) => {
       try {
