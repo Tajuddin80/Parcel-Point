@@ -24,6 +24,7 @@ import ActiveRiders from "../Pages/Dashboard/ActiveRiders/ActiveRiders";
 import MakeAdmin from "../Pages/Dashboard/MakeAdmin/MakeAdmin";
 import Forbidden from "../Pages/Forbidden/Forbidden";
 import AdminRoute from "../Routes/AdminRoute";
+import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
 
 // Define loader function
 const homeLoader = async () => {
@@ -177,6 +178,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <PendingRiders></PendingRiders>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "assignRider",
+        element: (
+          <AdminRoute>
+            <AssignRider></AssignRider>
           </AdminRoute>
         ),
       },

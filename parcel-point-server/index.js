@@ -61,9 +61,6 @@ async function run() {
       }
     };
 
-
-
-
     // verify admin role
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -188,39 +185,39 @@ async function run() {
     });
 
     // Get user by email search
-// Get users by email and/or role
-app.get("/users/search", async (req, res) => {
-  const { email = "", role = "" } = req.query;
+    // Get users by email and/or role
+    app.get("/users/search", async (req, res) => {
+      const { email = "", role = "" } = req.query;
 
-  // If neither email nor role is provided
-  if (!email && !role) {
-    return res.status(400).send({ message: "Missing email or role query" });
-  }
+      // If neither email nor role is provided
+      if (!email && !role) {
+        return res.status(400).send({ message: "Missing email or role query" });
+      }
 
-  const query = {};
+      const query = {};
 
-  if (email) {
-    const regex = new RegExp(email, "i"); // case-insensitive partial match
-    query.email = { $regex: regex };
-  }
+      if (email) {
+        const regex = new RegExp(email, "i"); // case-insensitive partial match
+        query.email = { $regex: regex };
+      }
 
-  if (role) {
-    query.role = role;
-  }
+      if (role) {
+        query.role = role;
+      }
 
-  try {
-    const users = await usersCollection
-      .find(query)
-      .project({ email: 1, created_at: 1, role: 1 })
-      .limit(10)
-      .toArray();
+      try {
+        const users = await usersCollection
+          .find(query)
+          .project({ email: 1, created_at: 1, role: 1 })
+          .limit(10)
+          .toArray();
 
-    res.send(users);
-  } catch (err) {
-    console.error("Error searching users", err);
-    res.status(500).send({ message: "Error searching users" });
-  }
-});
+        res.send(users);
+      } catch (err) {
+        console.error("Error searching users", err);
+        res.status(500).send({ message: "Error searching users" });
+      }
+    });
 
     // Get role by email
     app.get("/users/:email/role", async (req, res) => {
@@ -377,61 +374,60 @@ app.get("/users/search", async (req, res) => {
     );
 
     app.patch(
-  "/riders/:id",
-  verifyFireBaseToken,
-  verifyAdmin,
-  async (req, res) => {
-    const { id } = req.params;
-    const { status, email } = req.body;
+      "/riders/:id",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        const { status, email } = req.body;
 
-    const allowedStatuses = ["active", "rejected", "pending"];
+        const allowedStatuses = ["active", "rejected", "pending"];
 
-    // Validate status input
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).send({ message: "Invalid status value" });
-    }
+        // Validate status input
+        if (!allowedStatuses.includes(status)) {
+          return res.status(400).send({ message: "Invalid status value" });
+        }
 
-    try {
-      // Update rider's status
-      const result = await ridersCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { status } }
-      );
+        try {
+          // Update rider's status
+          const result = await ridersCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { status } }
+          );
 
-      // Now update user role based on status
-      const userQuery = { email };
-      let userUpdateDoc = {};
+          // Now update user role based on status
+          const userQuery = { email };
+          let userUpdateDoc = {};
 
-      if (status === "active") {
-        userUpdateDoc = { $set: { role: "rider" } };
-      } else if (status === "rejected" || status === "pending") {
-        userUpdateDoc = { $set: { role: "user" } };
+          if (status === "active") {
+            userUpdateDoc = { $set: { role: "rider" } };
+          } else if (status === "rejected" || status === "pending") {
+            userUpdateDoc = { $set: { role: "user" } };
+          }
+
+          const roleResult = await usersCollection.updateOne(
+            userQuery,
+            userUpdateDoc
+          );
+
+          console.log("User role update result:", roleResult.modifiedCount);
+
+          if (result.modifiedCount === 0) {
+            return res
+              .status(404)
+              .send({ message: "Rider not found or status unchanged" });
+          }
+
+          res.send({
+            message: `Rider status updated to ${status}`,
+            result,
+          });
+        } catch (error) {
+          console.error("Error updating rider status:", error);
+          res.status(500).send({ message: "Failed to update rider status" });
+        }
       }
-
-      const roleResult = await usersCollection.updateOne(
-        userQuery,
-        userUpdateDoc
-      );
-
-      console.log("User role update result:", roleResult.modifiedCount);
-
-      if (result.modifiedCount === 0) {
-        return res
-          .status(404)
-          .send({ message: "Rider not found or status unchanged" });
-      }
-
-      res.send({
-        message: `Rider status updated to ${status}`,
-        result,
-      });
-    } catch (error) {
-      console.error("Error updating rider status:", error);
-      res.status(500).send({ message: "Failed to update rider status" });
-    }
-  }
-);
-
+    );
 
     app.get("/approved", verifyFireBaseToken, verifyAdmin, async (req, res) => {
       try {
@@ -442,6 +438,25 @@ app.get("/users/search", async (req, res) => {
       } catch (error) {
         console.error("Error fetching approved riders:", error);
         res.status(500).send({ message: "Failed to load approved riders" });
+      }
+    });
+
+    // GET /parcels?status=assignable
+    app.get("/parcels", verifyFireBaseToken, verifyAdmin, async (req, res) => {
+      const { status } = req.query;
+
+      let query = {};
+      if (status === "assignable") {
+        query.deliveryStatus = "not_collected";
+        query.paymentStatus = "paid";
+      }
+
+      try {
+        const parcels = await parcelsCollection.find(query).toArray();
+        res.send(parcels);
+      } catch (err) {
+        console.error("Failed to fetch parcels", err);
+        res.status(500).send({ message: "Server error" });
       }
     });
 

@@ -10,6 +10,7 @@ import {
   FaMotorcycle,
   FaClock,
   FaUserShield,
+  FaPeopleCarry,
 } from "react-icons/fa";
 
 import Navbar from "../../Pages/shared/Navbar/Navbar";
@@ -122,6 +123,11 @@ const DashboardLayout = () => {
                     className={navLinkClass}
                   >
                     <FaClock /> Pending Riders
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/dashboard/assignRider" className={navLinkClass}>
+                    <FaPeopleCarry /> Assign Rider
                   </NavLink>
                 </li>
                 <li>
