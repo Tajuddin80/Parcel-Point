@@ -170,8 +170,10 @@ const AssignRider = () => {
                           try {
                             await axiosSecure.patch("/assign", {
                               parcelId: selectedParcel._id,
-                              riderId: rider._id,
-                              riderEmail: rider.email,
+                              assignedRiderId: rider._id,
+                              assignedRiderEmail: rider.email,
+                              assignedRiderContact: rider.contact,
+                              assignedRiderNid: rider.nid,
                             });
 
                             Swal.fire(

@@ -145,9 +145,21 @@ async function run() {
 
     // PATCH: Assign a rider to a parcel
     app.patch("/assign", verifyFireBaseToken, verifyAdmin, async (req, res) => {
-      const { parcelId, riderId, riderEmail } = req.body;
+      const {
+        parcelId,
+        assignedRiderId,
+        assignedRiderEmail,
+        assignedRiderContact,
+        assignedRiderNid,
+      } = req.body;
 
-      if (!parcelId || !riderId || !riderEmail) {
+      if (
+        !parcelId ||
+        !assignedRiderId ||
+        !assignedRiderEmail ||
+        !assignedRiderContact ||
+        !assignedRiderNid
+      ) {
         return res.status(400).send({ message: "Missing assignment details" });
       }
 
@@ -157,18 +169,18 @@ async function run() {
           { _id: new ObjectId(parcelId) },
           {
             $set: {
-              deliveryStatus: "in-transit",
-              assignedRider: {
-                id: riderId,
-                email: riderEmail,
-              },
+              deliveryStatus: "rider_assigned",
+              assignedRiderId,
+              assignedRiderEmail,
+              assignedRiderContact,
+              assignedRiderNid,
             },
           }
         );
 
         // 2. Update rider status
         const riderUpdate = await ridersCollection.updateOne(
-          { _id: new ObjectId(riderId) },
+          { _id: new ObjectId(assignedRiderId) },
           { $set: { status: "in-delivery" } }
         );
 
