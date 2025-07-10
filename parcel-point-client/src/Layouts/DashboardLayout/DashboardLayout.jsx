@@ -11,6 +11,7 @@ import {
   FaClock,
   FaUserShield,
   FaPeopleCarry,
+  FaTasks,
 } from "react-icons/fa";
 
 import Navbar from "../../Pages/shared/Navbar/Navbar";
@@ -104,6 +105,21 @@ const DashboardLayout = () => {
                 <FaUserEdit /> Update Profile
               </NavLink>
             </li>
+{/* rider links */}
+
+{
+  !isRoleLoading && role === "rider" && (
+    <>
+           <li>
+                  <NavLink to="/dashboard/pendingDeliveries" className={navLinkClass}>
+                    <FaTasks /> Pending Deliveries
+                  </NavLink>
+                </li>
+    
+    </>
+  )
+}
+
 
             {/* admin links */}
 

@@ -24,6 +24,8 @@ const UpdateProfile = () => {
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const imageUploadRef = useRef();
 
+// const (data: UserMetadata, isLoading) = 
+
   const handleUpdateProfile = async () => {
     if (
       !imageUploadRef.current ||

@@ -25,6 +25,8 @@ import MakeAdmin from "../Pages/Dashboard/MakeAdmin/MakeAdmin";
 import Forbidden from "../Pages/Forbidden/Forbidden";
 import AdminRoute from "../Routes/AdminRoute";
 import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
+import PendingDeliveries from "../Pages/Dashboard/PendingDeliveries/PendingDeliveries";
+import RiderRoute from "../Routes/RiderRoutes";
 
 // Define loader function
 const homeLoader = async () => {
@@ -156,7 +158,18 @@ export const router = createBrowserRouter([
         element: <Payment></Payment>,
       },
 
-      // admin routes
+      // rider only routes
+
+      {
+        path: "pendingDeliveries",
+        element: (
+          <RiderRoute>
+            <PendingDeliveries></PendingDeliveries>
+          </RiderRoute>
+        ),
+      },
+
+      // admin only routes
       {
         path: "makeAdmin",
         element: (
