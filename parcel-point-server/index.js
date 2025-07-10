@@ -38,7 +38,7 @@ async function run() {
       credential: admin.credential.cert(serviceAccount),
     });
 
-    // custom middleware
+    // custom middlewares here
     const verifyFireBaseToken = async (req, res, next) => {
       // console.log('header in iddleware', req.headers);
       const authHeader = req.headers.authorization;
@@ -59,6 +59,17 @@ async function run() {
       } catch (error) {
         return res.status(403).send({ message: "forbidden access" });
       }
+    };
+    // verify admin role
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+
+      if (!user || user.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
     };
 
     // add parcels to the db
@@ -169,7 +180,6 @@ async function run() {
       });
     });
 
-
     // Get user by email search
     app.get("/users/search", async (req, res) => {
       const emailQuery = req.query.email; //  use query param
@@ -207,8 +217,8 @@ async function run() {
         }
         res.send({ role: user.role || "user" });
       } catch (error) {
-        console.error("Error getting the role: ", error)
-        res.status(500).send({message: "Failed to get role"})
+        console.error("Error getting the role: ", error);
+        res.status(500).send({ message: "Failed to get role" });
       }
     });
 
@@ -251,33 +261,38 @@ async function run() {
       });
     });
 
-    app.patch("/users/:id/role", async (req, res) => {
-      const { id } = req.params;
-      const { role } = req.body;
+    app.patch(
+      "/users/:id/role",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        const { role } = req.body;
 
-      if (!["admin", "user"].includes(role)) {
-        return res.status(400).send({ message: "invalid role" });
+        if (!["admin", "user"].includes(role)) {
+          return res.status(400).send({ message: "invalid role" });
+        }
+
+        try {
+          const result = await usersCollection.updateOne(
+            {
+              _id: new ObjectId(id),
+            },
+            {
+              $set: { role },
+            }
+          );
+          res.send({ message: `User role updated to ${role}`, result });
+        } catch (error) {
+          console.error(error);
+
+          res.status(500).send({ message: "Failed to update user role" });
+        }
       }
-
-      try {
-        const result = await usersCollection.updateOne(
-          {
-            _id: new ObjectId(id),
-          },
-          {
-            $set: { role },
-          }
-        );
-        res.send({ message: `User role updated to ${role}`, result });
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).send({ message: "Failed to update user role" });
-      }
-    });
+    );
 
     // Rider related api's
-    app.post("/riders", async (req, res) => {
+    app.post("/riders", verifyFireBaseToken, async (req, res) => {
       const riderEmail = req.body.email;
       const newRider = req.body;
 
@@ -312,7 +327,7 @@ async function run() {
     });
 
     // GET all pending riders
-    app.get("/pending", async (req, res) => {
+    app.get("/pending", verifyFireBaseToken, verifyAdmin, async (req, res) => {
       try {
         const pendingRiders = await ridersCollection
           .find({
@@ -326,63 +341,73 @@ async function run() {
       }
     });
 
-    app.delete("/riders/:id", async (req, res) => {
-      const { id } = req.params;
-      try {
-        const result = await ridersCollection.deleteOne({
-          _id: new ObjectId(id),
-        });
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: "Failed to delete rider" });
+    app.delete(
+      "/riders/:id",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        try {
+          const result = await ridersCollection.deleteOne({
+            _id: new ObjectId(id),
+          });
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({ message: "Failed to delete rider" });
+        }
       }
-    });
+    );
 
-    app.patch("/riders/:id", async (req, res) => {
-      const { id } = req.params;
-      const { status, email } = req.body;
+    app.patch(
+      "/riders/:id",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        const { status, email } = req.body;
 
-      const allowedStatuses = ["active", "rejected", "pending"];
+        const allowedStatuses = ["active", "rejected", "pending"];
 
-      //  Validate status input
-      if (!allowedStatuses.includes(status)) {
-        return res.status(400).send({ message: "Invalid status value" });
-      }
+        //  Validate status input
+        if (!allowedStatuses.includes(status)) {
+          return res.status(400).send({ message: "Invalid status value" });
+        }
 
-      try {
-        const result = await ridersCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: { status: status } }
-        );
-        // update user role for accepting rider
-        if (status === "active") {
-          const userQuery = { email };
-          const userUpdateDoc = {
-            $set: {
-              role: "rider",
-            },
-          };
-          const roleResult = await usersCollection.updateOne(
-            userQuery,
-            userUpdateDoc
+        try {
+          const result = await ridersCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { status: status } }
           );
-          console.log(roleResult.modifiedCount);
-        }
+          // update user role for accepting rider
+          if (status === "active") {
+            const userQuery = { email };
+            const userUpdateDoc = {
+              $set: {
+                role: "rider",
+              },
+            };
+            const roleResult = await usersCollection.updateOne(
+              userQuery,
+              userUpdateDoc
+            );
+            console.log(roleResult.modifiedCount);
+          }
 
-        if (result.modifiedCount === 0) {
-          return res
-            .status(404)
-            .send({ message: "Rider not found or status unchanged" });
-        }
+          if (result.modifiedCount === 0) {
+            return res
+              .status(404)
+              .send({ message: "Rider not found or status unchanged" });
+          }
 
-        res.send(result);
-      } catch (error) {
-        console.error("Error updating rider status:", error);
-        res.status(500).send({ message: "Failed to update rider status" });
+          res.send(result);
+        } catch (error) {
+          console.error("Error updating rider status:", error);
+          res.status(500).send({ message: "Failed to update rider status" });
+        }
       }
-    });
+    );
 
-    app.get("/approved", async (req, res) => {
+    app.get("/approved", verifyFireBaseToken, verifyAdmin, async (req, res) => {
       try {
         const approvedRiders = await ridersCollection
           .find({ status: "active" })

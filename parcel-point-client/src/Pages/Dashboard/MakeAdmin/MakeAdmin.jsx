@@ -38,21 +38,21 @@ const MakeAdmin = () => {
     },
   });
 
-const handleRoleChange = (id, newRole) => {
-  Swal.fire({
-    title: `Are you sure?`,
-    text: `You are about to make this user a ${newRole.toUpperCase()}.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, update role!",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      updateRole({ id, role: newRole });
-    }
-  });
-};
+  const handleRoleChange = (id, newRole) => {
+    Swal.fire({
+      title: `Are you sure?`,
+      text: `You are about to make this user a ${newRole.toUpperCase()}.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, update role!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateRole({ id, role: newRole });
+      }
+    });
+  };
 
   return (
     <section className="p-6 bg-white rounded-xl shadow-md">

@@ -144,14 +144,7 @@ export const router = createBrowserRouter([
         path: "trackParcel",
         element: <TrackParcel></TrackParcel>,
       },
-      {
-        path: "activeRiders",
-        element: <ActiveRiders></ActiveRiders>,
-      },
-      {
-        path: "pendingRiders",
-        element: <PendingRiders></PendingRiders>,
-      },
+  
       {
         path: "updateProfile",
         element: <UpdateProfile></UpdateProfile>,
@@ -161,12 +154,31 @@ export const router = createBrowserRouter([
         path: "payment/:parcelId",
         element: <Payment></Payment>,
       },
+
+      // admin routes
       {
         path: "makeAdmin",
-        element:
-        <AdminRoute>
-<MakeAdmin></MakeAdmin>
-        </AdminRoute> 
+        element: (
+          <AdminRoute>
+            <MakeAdmin></MakeAdmin>
+          </AdminRoute>
+        ),
+      },
+          {
+        path: "activeRiders",
+        element: (
+          <AdminRoute>
+            <ActiveRiders></ActiveRiders>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "pendingRiders",
+        element: (
+          <AdminRoute>
+            <PendingRiders></PendingRiders>
+          </AdminRoute>
+        ),
       },
     ],
   },

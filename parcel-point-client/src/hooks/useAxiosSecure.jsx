@@ -13,7 +13,14 @@ const useAxiosSecure = () => {
     (error) => {
       return Promise.reject(error);
     };
-
+  axiosSecure.interceptors.response.use(
+    (res) => {
+      return res;
+    },
+    (error) => {
+      console.log("inside response interceptor", error);
+    }
+  );
   return axiosSecure;
 };
 export default useAxiosSecure;

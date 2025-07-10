@@ -1,24 +1,22 @@
-import React from "react";
+
 import useAuth from "../hooks/useAuth";
-import Loader from "../Pages/shared/Loader/Loader";
 import useUserRole from "../hooks/useUserRole";
+import Loader from "../Pages/shared/Loader/Loader";
 import { Navigate } from "react-router";
 
-const AdminRoute = () => {
+const AdminRoute = ({children}) => {
   const { user, loading } = useAuth();
-  const { role, isRoleLoading } = useUserRole();
+  const { role, roleLoading } = useUserRole();
 
-  if (loading || isRoleLoading) {
-    return <Loader></Loader>;
+  if (loading || roleLoading) {
+    return <Loader />;
   }
 
   if (!user || role !== "admin") {
-    return (
-      <Navigate state={{ from: location.pathname }} to="/forbidden">
-      </Navigate>
-    );
+    return <Navigate to={'/forbidden'}></Navigate>
   }
-  return <div>AdminRoute</div>;
+
+ return children
 };
 
 export default AdminRoute;
