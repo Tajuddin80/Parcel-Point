@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
+import useTrackingLogger from "../../../hooks/useTrackingLogger";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
 import {
@@ -9,12 +10,14 @@ import {
   FaMapMarkerAlt,
   FaMotorcycle,
 } from "react-icons/fa";
+import useAuth from "../../../hooks/useAuth";
 
 const AssignRider = () => {
   const axiosSecure = useAxiosSecure();
   const [selectedParcel, setSelectedParcel] = useState(null);
   const queryClient = useQueryClient();
-
+  const { logTracking } = useTrackingLogger();
+  const { user } = useAuth();
   // Fetch assignable parcels from new endpoint
   const {
     data: parcels = [],
@@ -181,6 +184,14 @@ const AssignRider = () => {
                               "Rider assigned and statuses updated.",
                               "success"
                             );
+
+                            // parcel tracking update or feature
+                            await logTracking({
+                              tracking_id: selectedParcel.trackingId,
+                              status: "Rider assigned",
+                              details: `Assigned to ${rider?.name}, Mobile: ${rider.contact}`,
+                              updated_by: `Email: ${user.email}`,
+                            });
 
                             // Refetch assignable parcels list
                             await queryClient.invalidateQueries([

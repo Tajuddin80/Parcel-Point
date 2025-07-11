@@ -795,6 +795,33 @@ async function run() {
       res.status(201).send(result);
     });
 
+
+    // to prevent multiple entry we can do IMPORTANT!
+
+    // POST /trackings
+// app.post("/trackings", async (req, res) => {
+//   const { tracking_id, status, details, updated_by } = req.body;
+
+//   try {
+//     const filter = { tracking_id, status };
+//     const update = {
+//       $set: {
+//         details,
+//         updated_by,
+//         updated_at: new Date(),
+//       },
+//     };
+
+//     const options = { upsert: true }; // Create new if not exists, otherwise update
+//     const result = await db.collection("trackings").updateOne(filter, update, options);
+
+//     res.status(200).json({ message: "Tracking log saved", result });
+//   } catch (err) {
+//     console.error("Error logging tracking:", err);
+//     res.status(500).json({ error: "Failed to log tracking" });
+//   }
+// });
+
     // --------------------------------------payent related apis here----------------------------------------------------
     // save payment in db
     app.post("/payments", verifyFireBaseToken, async (req, res) => {

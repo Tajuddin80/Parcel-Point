@@ -342,6 +342,8 @@ const SendParcel = () => {
                   "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
               },
             }).then(async () => {
+
+                  // parcel tracking update
               await logTracking({
                 tracking_id: orderData.trackingId,
                 status: "parcel is created",

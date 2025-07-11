@@ -4,11 +4,12 @@ import Swal from "sweetalert2";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
+import useTrackingLogger from "../../../hooks/useTrackingLogger";
 
 const PendingDeliveries = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-
+const { logTracking } = useTrackingLogger();
   const {
     data: parcels = [],
     isPending,
@@ -22,7 +23,7 @@ const PendingDeliveries = () => {
     enabled: !!user?.email,
   });
 
-  const handleUpdateStatus = async (parcelId, currentStatus) => {
+  const handleUpdateStatus = async (parcelId, currentStatus, trackingId) => {
     let nextStatus;
     if (currentStatus === "rider_assigned") {
       nextStatus = "in_transit";
@@ -50,6 +51,13 @@ const PendingDeliveries = () => {
       });
 
       if (res.data.modifiedCount > 0) {
+//  Log tracking status
+     await logTracking({
+        tracking_id: trackingId,
+        status: nextStatus,
+        details: `Status changed to ${nextStatus} by rider.`,
+        updated_by: `Email: ${user.email}`,
+      });
         Swal.fire("Success", `Parcel marked as ${nextStatus}`, "success");
         refetch();
       } else {
@@ -107,7 +115,7 @@ const PendingDeliveries = () => {
                       <button
                         className="btn btn-xs md:btn-sm btn-warning"
                         onClick={() =>
-                          handleUpdateStatus(parcel._id, "rider_assigned")
+                          handleUpdateStatus(parcel._id, "rider_assigned", parcel.trackingId)
                         }
                       >
                         Mark as Picked
@@ -117,7 +125,7 @@ const PendingDeliveries = () => {
                       <button
                         className="btn btn-xs md:btn-sm btn-success"
                         onClick={() =>
-                          handleUpdateStatus(parcel._id, "in_transit")
+                          handleUpdateStatus(parcel._id, "in_transit", parcel.trackingId)
                         }
                       >
                         Mark as Delivered

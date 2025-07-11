@@ -7,6 +7,7 @@ import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 import useAuth from "../../../../hooks/useAuth";
 import Swal from "sweetalert2";
 import Loader from "../../../shared/Loader/Loader";
+import useTrackingLogger from "../../../../hooks/useTrackingLogger";
 
 const PaymentForm = () => {
   const navigate = useNavigate();
@@ -17,11 +18,11 @@ const PaymentForm = () => {
   const elements = useElements();
   const { parcelId } = useParams();
   const { user } = useAuth();
-
+  const { logTracking } = useTrackingLogger();
   // Use TanStack query to fetch parcel info
   const { isPending, data: parcelInfo = {} } = useQuery({
     queryKey: ["parcels", parcelId],
-      enabled: !!user?.email,
+    enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(`/parcelData/${parcelId}`);
       return res.data;
@@ -113,8 +114,17 @@ const PaymentForm = () => {
               html: `Transaction ID: <strong>${transactionId}</strong>`,
               icon: "success",
               confirmButtonText: "Go to My Parcels",
-            }).then((result) => {
+            }).then(async (result) => {
               if (result.isConfirmed) {
+
+                    // parcel tracking update
+                await logTracking({
+                  tracking_id: parcelInfo.trackingId,
+                  status: "payment done",
+                  details: `Created by ${user.displayName}`,
+                  updated_by: `Email: ${user.email}`,
+                });
+
                 navigate("/dashboard/myParcels");
               }
             });
