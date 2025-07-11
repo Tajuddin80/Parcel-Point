@@ -779,6 +779,28 @@ async function run() {
       res.send(updates);
     });
 
+
+ // GET /trackings?tracking_id=TRK-XYZ123
+app.get("/trackings", async (req, res) => {
+  try {
+    const tracking_id = req.query.tracking_id;
+    if (!tracking_id) {
+      return res.status(400).json({ message: "Tracking ID is required" });
+    }
+
+    const logs = await trackingsCollection
+      .find({ tracking_id })
+      .sort({ timestamp: 1 }) // ascending order
+      .toArray();
+
+    res.send(logs);
+  } catch (error) {
+    console.error("Failed to fetch tracking logs:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
     // post tracking updats 
     app.post("/trackings", async (req, res) => {
       const update = req.body;
