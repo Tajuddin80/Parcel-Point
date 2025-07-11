@@ -16,6 +16,7 @@ import warehouseData from "../../assets/warehouses.json";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import { useNavigate } from "react-router";
+import useTrackingLogger from "../../hooks/useTrackingLogger";
 
 const MySwal = withReactContent(Swal);
 
@@ -29,9 +30,10 @@ const SendParcel = () => {
     handleSubmit,
     watch,
     setValue,
-    reset,
     formState: { errors },
   } = useForm();
+
+  const { logTracking } = useTrackingLogger();
 
   // Watch parcel type for conditional weight input
   const parcelType = watch("parcelType", "Document");
@@ -198,278 +200,162 @@ const SendParcel = () => {
     return { total, breakdown: breakdownContent };
   };
 
-  // const onSubmit = (data) => {
-  //   const costInfo = calculateCost(data);
-  //   const userEmail = user?.email || "guest@example.com";
-  //   const userName = user?.displayName || "guest";
+  const onSubmit = (data) => {
+    const {
+      senderRegion,
+      senderDistrict,
+      senderWarehouse,
+      receiverRegion,
+      receiverDistrict,
+      receiverWarehouse,
+    } = data;
 
-  //   MySwal.fire({
-  //     icon: "",
-  //     title: (
-  //       <div className="flex items-center gap-2 text-[#03373D]">
-  //         <CheckCircle className="w-5 h-5 text-lime-500" /> Parcel Summary
-  //       </div>
-  //     ),
-  //     html: (
-  //       <div className="text-sm md:text-base text-left">
-  //         {costInfo.breakdown}
-  //         <div className="mt-3 p-3 border border-[#B6D9D4] rounded bg-[#F0F9F8] space-y-1">
-  //           <div className="flex justify-between">
-  //             <span className="flex items-center gap-1 text-gray-600">
-  //               <User className="w-4 h-4" /> <strong>User Name</strong>
-  //             </span>
-  //             <span className="font-medium">{userName}</span>
-  //           </div>
-  //           <div className="flex justify-between">
-  //             <span className="flex items-center gap-1 text-gray-600">
-  //               <Mail className="w-4 h-4" /> <strong>User Email</strong>
-  //             </span>
-  //             <span className="font-medium">{userEmail}</span>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     ),
-  //     showCancelButton: true,
-  //     confirmButtonText: (
-  //       <span className="flex items-center gap-1">
-  //         <ArrowRight className="w-4 h-4" /> Proceed to Payment
-  //       </span>
-  //     ),
-  //     cancelButtonText: (
-  //       <span className="flex items-center gap-1">
-  //         <Edit3 className="w-4 h-4" /> Edit
-  //       </span>
-  //     ),
-  //     customClass: {
-  //       popup: "rounded-2xl shadow-lg",
-  //       confirmButton:
-  //         "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
-  //       cancelButton:
-  //         "bg-white border border-[#B6D9D4] text-gray-600 font-medium rounded px-4 py-2",
-  //     },
-  //     width: "600px",
-  //     background: "#fff",
-  //     backdrop: "rgba(0, 0, 0, 0.4)",
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       const trackingId = generateTrackingId();
-  //       const createdAt = new Date();
-  //       const orderData = {
-  //         ...data,
-  //         trackingId,
-  //         deliveryStatus: "not_collected",
-  //         paymentStatus: "unpaid",
-  //         createdAt: createdAt.toISOString(),
-  //         created_by: userEmail,
-  //         totalCost: costInfo.total,
-  //       };
-  //       console.log(orderData);
+    const isSameLocation =
+      senderRegion === receiverRegion &&
+      senderDistrict === receiverDistrict &&
+      senderWarehouse === receiverWarehouse;
 
-  //       axiosSecure.post("/parcels", orderData).then((res) => {
-  //         if (res.data.insertedId) {
-  //           MySwal.fire({
-  //             html: (
-  //               <div className="text-left text-sm md:text-base">
-  //                 <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
-  //                   Your tracking ID:
-  //                   <span className="text-lime-600">{trackingId}</span>
-  //                   <button
-  //                     onClick={() => {
-  //                       navigator.clipboard.writeText(trackingId);
-  //                       Swal.fire({
-  //                         toast: true,
-  //                         position: "top-end",
-  //                         icon: "success",
-  //                         title: "Tracking ID copied!",
-  //                         showConfirmButton: false,
-  //                         timer: 1500,
-  //                       });
-  //                     }}
-  //                     className="text-gray-500 hover:text-lime-600"
-  //                     title="Copy Tracking ID"
-  //                   >
-  //                     <Copy className="w-4 h-4" />
-  //                   </button>
-  //                 </div>
-  //                 <div className="font-bold text-gray-700 mb-2">
-  //                   Order placing time:{" "}
-  //                   <span className="text-lime-600">
-  //                     {createdAt.toLocaleString("en-US", {
-  //                       year: "numeric",
-  //                       month: "short",
-  //                       day: "numeric",
-  //                       hour: "2-digit",
-  //                       minute: "2-digit",
-  //                       second: "2-digit",
-  //                       hour12: true,
-  //                     })}
-  //                   </span>
-  //                 </div>
-  //                 <div className="border-t border-dashed my-2"></div>
-  //                 <div className="text-gray-700">Full Order Summary:</div>
-  //                 {costInfo.breakdown}
-  //               </div>
-  //             ),
-  //             confirmButtonText: "OK",
-  //             customClass: {
-  //               popup: "rounded-2xl shadow-lg",
-  //               confirmButton:
-  //                 "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
-  //             },
-  //           });
-  //         }
-  //       });
-  //     }
-  //   });
-  // };
-const onSubmit = (data) => {
-  const {
-    senderRegion,
-    senderDistrict,
-    senderWarehouse,
-    receiverRegion,
-    receiverDistrict,
-    receiverWarehouse,
-  } = data;
-
-  const isSameLocation =
-    senderRegion === receiverRegion &&
-    senderDistrict === receiverDistrict &&
-    senderWarehouse === receiverWarehouse;
-
-  if (isSameLocation) {
-    return MySwal.fire({
-      icon: "error",
-      title: "Invalid Destination",
-      text: "Sender and receiver destinations cannot be exactly the same. Please choose a different receiver location.",
-      confirmButtonColor: "#CAEB66",
-    });
-  }
-
-  const costInfo = calculateCost(data);
-  const userEmail = user?.email || "guest@example.com";
-  const userName = user?.displayName || "guest";
-
-  MySwal.fire({
-    icon: "",
-    title: (
-      <div className="flex items-center gap-2 text-[#03373D]">
-        <CheckCircle className="w-5 h-5 text-lime-500" /> Parcel Summary
-      </div>
-    ),
-    html: (
-      <div className="text-sm md:text-base text-left">
-        {costInfo.breakdown}
-        <div className="mt-3 p-3 border border-[#B6D9D4] rounded bg-[#F0F9F8] space-y-1">
-          <div className="flex justify-between">
-            <span className="flex items-center gap-1 text-gray-600">
-              <User className="w-4 h-4" /> <strong>User Name</strong>
-            </span>
-            <span className="font-medium">{userName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="flex items-center gap-1 text-gray-600">
-              <Mail className="w-4 h-4" /> <strong>User Email</strong>
-            </span>
-            <span className="font-medium">{userEmail}</span>
-          </div>
-        </div>
-      </div>
-    ),
-    showCancelButton: true,
-    confirmButtonText: (
-      <span className="flex items-center gap-1">
-        <ArrowRight className="w-4 h-4" /> Proceed to Payment
-      </span>
-    ),
-    cancelButtonText: (
-      <span className="flex items-center gap-1">
-        <Edit3 className="w-4 h-4" /> Edit
-      </span>
-    ),
-    customClass: {
-      popup: "rounded-2xl shadow-lg",
-      confirmButton:
-        "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
-      cancelButton:
-        "bg-white border border-[#B6D9D4] text-gray-600 font-medium rounded px-4 py-2",
-    },
-    width: "600px",
-    background: "#fff",
-    backdrop: "rgba(0, 0, 0, 0.4)",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      const trackingId = generateTrackingId();
-      const createdAt = new Date();
-      const orderData = {
-        ...data,
-        trackingId,
-        deliveryStatus: "not_collected",
-        paymentStatus: "unpaid",
-        createdAt: createdAt.toISOString(),
-        created_by: userEmail,
-        totalCost: costInfo.total,
-      };
-
-      axiosSecure.post("/parcels", orderData).then((res) => {
-        if (res.data.insertedId) {
-          MySwal.fire({
-            html: (
-              <div className="text-left text-sm md:text-base">
-                <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  Your tracking ID:
-                  <span className="text-lime-600">{trackingId}</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(trackingId);
-                      Swal.fire({
-                        toast: true,
-                        position: "top-end",
-                        icon: "success",
-                        title: "Tracking ID copied!",
-                        showConfirmButton: false,
-                        timer: 1500,
-                      });
-                    }}
-                    className="text-gray-500 hover:text-lime-600"
-                    title="Copy Tracking ID"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="font-bold text-gray-700 mb-2">
-                  Order placing time:{" "}
-                  <span className="text-lime-600">
-                    {createdAt.toLocaleString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      hour12: true,
-                    })}
-                  </span>
-                </div>
-                <div className="border-t border-dashed my-2"></div>
-                <div className="text-gray-700">Full Order Summary:</div>
-                {costInfo.breakdown}
-              </div>
-            ),
-            confirmButtonText: "OK",
-            customClass: {
-              popup: "rounded-2xl shadow-lg",
-              confirmButton:
-                "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
-            },
-          }).then(()=>{
-              navigate("/dashboard/myParcels");
-          });
-        }
+    if (isSameLocation) {
+      return MySwal.fire({
+        icon: "error",
+        title: "Invalid Destination",
+        text: "Sender and receiver destinations cannot be exactly the same. Please choose a different receiver location.",
+        confirmButtonColor: "#CAEB66",
       });
     }
-  });
-};
+
+    const costInfo = calculateCost(data);
+    const userEmail = user?.email || "guest@example.com";
+    const userName = user?.displayName || "guest";
+
+    MySwal.fire({
+      icon: "",
+      title: (
+        <div className="flex items-center gap-2 text-[#03373D]">
+          <CheckCircle className="w-5 h-5 text-lime-500" /> Parcel Summary
+        </div>
+      ),
+      html: (
+        <div className="text-sm md:text-base text-left">
+          {costInfo.breakdown}
+          <div className="mt-3 p-3 border border-[#B6D9D4] rounded bg-[#F0F9F8] space-y-1">
+            <div className="flex justify-between">
+              <span className="flex items-center gap-1 text-gray-600">
+                <User className="w-4 h-4" /> <strong>User Name</strong>
+              </span>
+              <span className="font-medium">{userName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="flex items-center gap-1 text-gray-600">
+                <Mail className="w-4 h-4" /> <strong>User Email</strong>
+              </span>
+              <span className="font-medium">{userEmail}</span>
+            </div>
+          </div>
+        </div>
+      ),
+      showCancelButton: true,
+      confirmButtonText: (
+        <span className="flex items-center gap-1">
+          <ArrowRight className="w-4 h-4" /> Proceed to Payment
+        </span>
+      ),
+      cancelButtonText: (
+        <span className="flex items-center gap-1">
+          <Edit3 className="w-4 h-4" /> Edit
+        </span>
+      ),
+      customClass: {
+        popup: "rounded-2xl shadow-lg",
+        confirmButton:
+          "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
+        cancelButton:
+          "bg-white border border-[#B6D9D4] text-gray-600 font-medium rounded px-4 py-2",
+      },
+      width: "600px",
+      background: "#fff",
+      backdrop: "rgba(0, 0, 0, 0.4)",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const trackingId = generateTrackingId();
+        const createdAt = new Date();
+
+        const orderData = {
+          ...data,
+          trackingId,
+          deliveryStatus: "not_collected",
+          paymentStatus: "unpaid",
+          createdAt: createdAt.toISOString(),
+          created_by: userEmail,
+          totalCost: costInfo.total,
+        };
+
+        axiosSecure.post("/parcels", orderData).then((res) => {
+          if (res.data.insertedId) {
+            MySwal.fire({
+              html: (
+                <div className="text-left text-sm md:text-base">
+                  <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    Your tracking ID:
+                    <span className="text-lime-600">{trackingId}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(trackingId);
+                        Swal.fire({
+                          toast: true,
+                          position: "top-end",
+                          icon: "success",
+                          title: "Tracking ID copied!",
+                          showConfirmButton: false,
+                          timer: 1500,
+                        });
+                      }}
+                      className="text-gray-500 hover:text-lime-600"
+                      title="Copy Tracking ID"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="font-bold text-gray-700 mb-2">
+                    Order placing time:{" "}
+                    <span className="text-lime-600">
+                      {createdAt.toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true,
+                      })}
+                    </span>
+                  </div>
+                  <div className="border-t border-dashed my-2"></div>
+                  <div className="text-gray-700">Full Order Summary:</div>
+                  {costInfo.breakdown}
+                </div>
+              ),
+              confirmButtonText: "OK",
+              customClass: {
+                popup: "rounded-2xl shadow-lg",
+                confirmButton:
+                  "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
+              },
+            }).then(async () => {
+              await logTracking({
+                tracking_id: orderData.trackingId,
+                status: "parcel is created",
+                details: `Created by ${user.displayName}`,
+                updated_by: `Email: ${user.email}`,
+              });
+
+              navigate("/dashboard/myParcels");
+            });
+          }
+        });
+      }
+    });
+  };
 
   return (
     <section className="w-full lg:w-[80vw] mx-auto p-4 md:p-8">

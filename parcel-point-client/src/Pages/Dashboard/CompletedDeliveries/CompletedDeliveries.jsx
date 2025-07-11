@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Swal from "sweetalert2";
+import { FaMoneyBillWave, FaWallet } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
-import { FaMoneyBillWave, FaWallet, FaShippingFast } from "react-icons/fa";
 
 const CompletedDeliveries = () => {
   const { user } = useAuth();
@@ -22,7 +22,11 @@ const CompletedDeliveries = () => {
     },
   });
 
-  const { data: walletInfo = {}, isLoading: isWalletLoading, refetch: refetchWallet } = useQuery({
+  const {
+    data: walletInfo = {},
+    isLoading: isWalletLoading,
+    refetch: refetchWallet,
+  } = useQuery({
     queryKey: ["rider-wallet", user?.email],
     enabled: !!user?.email,
     queryFn: async () => {
@@ -47,7 +51,11 @@ const CompletedDeliveries = () => {
       setCashoutAmount(0);
     },
     onError: (error) => {
-      Swal.fire("Error", error?.response?.data?.message || "Cashout failed.", "error");
+      Swal.fire(
+        "Error",
+        error?.response?.data?.message || "Cashout failed.",
+        "error"
+      );
     },
   });
 
@@ -62,7 +70,6 @@ const CompletedDeliveries = () => {
   return (
     <div className="">
       <h1 className="text-4xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-       
         Completed Deliveries
       </h1>
 
@@ -103,7 +110,11 @@ const CompletedDeliveries = () => {
         <button
           onClick={() => {
             if (cashoutAmount > (walletInfo.amountAvailable || 0)) {
-              return Swal.fire("Invalid", "You can't withdraw more than available.", "warning");
+              return Swal.fire(
+                "Invalid",
+                "You can't withdraw more than available.",
+                "warning"
+              );
             }
             if (cashoutAmount <= 0) {
               return Swal.fire("Invalid", "Enter a valid amount.", "warning");
@@ -140,18 +151,30 @@ const CompletedDeliveries = () => {
                 <td>
                   <span className="font-semibold">{parcel.senderName}</span>
                   <br />
-                  <small className="text-gray-500">{parcel.senderDistrict}</small>
+                  <small className="text-gray-500">
+                    {parcel.senderDistrict}
+                  </small>
                 </td>
                 <td>
                   <span className="font-semibold">{parcel.receiverName}</span>
                   <br />
-                  <small className="text-gray-500">{parcel.receiverDistrict}</small>
+                  <small className="text-gray-500">
+                    {parcel.receiverDistrict}
+                  </small>
                 </td>
                 <td className="capitalize text-sm">
                   {parcel.deliveryStatus.replace("_", " ")}
                 </td>
-                <td className="text-sm">{parcel.pickedAt ? new Date(parcel.pickedAt).toLocaleString() : "—"}</td>
-                <td className="text-sm">{parcel.deliveredAt ? new Date(parcel.deliveredAt).toLocaleString() : "—"}</td>
+                <td className="text-sm">
+                  {parcel.pickedAt
+                    ? new Date(parcel.pickedAt).toLocaleString()
+                    : "—"}
+                </td>
+                <td className="text-sm">
+                  {parcel.deliveredAt
+                    ? new Date(parcel.deliveredAt).toLocaleString()
+                    : "—"}
+                </td>
                 <td className="text-lg font-medium text-blue-600">
                   ৳{parseFloat(parcel.totalCost || 0).toFixed(2)}
                 </td>

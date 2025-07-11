@@ -33,6 +33,7 @@ async function run() {
     const usersCollection = db.collection("allUsers");
     const paymentsCollection = db.collection("allPayments");
     const ridersCollection = db.collection("allRiders");
+    const trackingsCollection = db.collection("allTrackings");
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
@@ -90,11 +91,7 @@ async function run() {
       next();
     };
 
-
-
-
-
-    
+    // -----------------------------------all parcel related api's here------------------------------------------
     // add parcels to the db
     app.post("/parcels", verifyFireBaseToken, async (req, res) => {
       try {
@@ -220,7 +217,8 @@ async function run() {
     });
 
     // GET /parcels?status=assignable paid but not collected
-    app.get( "/parcels/assignable",
+    app.get(
+      "/parcels/assignable",
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {
@@ -247,6 +245,7 @@ async function run() {
       }
     );
 
+    // ---------------------------------------------all user relateed api's here---------------------------------------------------------------
     // post an user to db
     app.post("/users", async (req, res) => {
       const { email, role, last_log_in, created_at } = req.body;
@@ -380,7 +379,8 @@ async function run() {
       });
     });
 
-    app.patch("/users/:id/role",
+    app.patch(
+      "/users/:id/role",
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {
@@ -476,7 +476,8 @@ async function run() {
       }
     );
 
-    app.patch( "/riders/:id",
+    app.patch(
+      "/riders/:id",
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {
@@ -556,7 +557,8 @@ async function run() {
 
     // get pending delivery task for rider
 
-    app.get( "/rider-parcels",
+    app.get(
+      "/rider-parcels",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -589,7 +591,8 @@ async function run() {
 
     // load completed parcel deleveries for a rider
 
-    app.get( "/rider-completed-parcels",
+    app.get(
+      "/rider-completed-parcels",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -620,7 +623,8 @@ async function run() {
     );
 
     // PATCH: Update parcel delivery status
-    app.patch( "/rider-parcels/:id/status",
+    app.patch(
+      "/rider-parcels/:id/status",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -676,7 +680,8 @@ async function run() {
       }
     );
 
-    app.get( "/rider/wallet",
+    app.get(
+      "/rider/wallet",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -703,7 +708,8 @@ async function run() {
       }
     );
 
-    app.post(  "/rider/cashout",
+    app.post(
+      "/rider/cashout",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -757,6 +763,39 @@ async function run() {
       }
     );
 
+    // --------------------------------------Tracking related api's -------------------------------------
+
+    // get updats by tracking id
+    app.get("/trackings/:trackingId", async (req, res) => {
+      const trackingId = req.params.trackingId;
+
+      const updates = await trackingsCollection
+        .find({
+          tracking_id: trackingId,
+        })
+        .sort({ timestamp: 1 })
+        .toArray();
+
+      res.send(updates);
+    });
+
+    // post tracking updats 
+    app.post("/trackings", async (req, res) => {
+      const update = req.body;
+
+      update.timestamp = new Date();
+
+      if (!update.tracking_id || !update.status) {
+        return res
+          .status(400)
+          .send({ message: "tracking id and status are required" });
+      }
+
+      const result = await trackingsCollection.insertOne(update);
+      res.status(201).send(result);
+    });
+
+    // --------------------------------------payent related apis here----------------------------------------------------
     // save payment in db
     app.post("/payments", verifyFireBaseToken, async (req, res) => {
       const payment = req.body;
@@ -806,7 +845,6 @@ async function run() {
     });
 
     // VVI:   write prompt in stripe.js AI : i want to create custom card payment system using react and node on the server
-
     // card payment intent related
     app.post("/create-payment-intent", async (req, res) => {
       const amountInCents = req.body.amountInCents;
