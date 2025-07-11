@@ -90,6 +90,11 @@ async function run() {
       next();
     };
 
+
+
+
+
+    
     // add parcels to the db
     app.post("/parcels", verifyFireBaseToken, async (req, res) => {
       try {
@@ -215,8 +220,7 @@ async function run() {
     });
 
     // GET /parcels?status=assignable paid but not collected
-    app.get(
-      "/parcels/assignable",
+    app.get( "/parcels/assignable",
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {
@@ -376,8 +380,7 @@ async function run() {
       });
     });
 
-    app.patch(
-      "/users/:id/role",
+    app.patch("/users/:id/role",
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {
@@ -473,8 +476,7 @@ async function run() {
       }
     );
 
-    app.patch(
-      "/riders/:id",
+    app.patch( "/riders/:id",
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {
@@ -553,8 +555,8 @@ async function run() {
     });
 
     // get pending delivery task for rider
-    app.get(
-      "/rider-parcels",
+
+    app.get( "/rider-parcels",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -585,32 +587,9 @@ async function run() {
       }
     );
 
-    // update the deliveryStatus by rider
-    app.patch(
-      "/rider-parcels/:id/status",
-      verifyFireBaseToken,
-      verifyRider,
-      async (req, res) => {
-        const { id } = req.params;
-        const { deliveryStatus } = req.body;
-
-        try {
-          const result = await parcelsCollection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { deliveryStatus } }
-          );
-
-          res.send(result);
-        } catch (error) {
-          console.error("Failed to update parcel status:", error);
-          res.status(500).send({ message: "Failed to update parcel status." });
-        }
-      }
-    );
-
     // load completed parcel deleveries for a rider
-    app.get(
-      "/rider-completed-parcels",
+
+    app.get( "/rider-completed-parcels",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -636,6 +615,144 @@ async function run() {
           res
             .status(500)
             .send({ message: "Failed to load completed deliveries" });
+        }
+      }
+    );
+
+    // PATCH: Update parcel delivery status
+    app.patch( "/rider-parcels/:id/status",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        const { id } = req.params;
+        const { deliveryStatus } = req.body;
+
+        try {
+          const updateFields = { deliveryStatus };
+
+          const parcel = await parcelsCollection.findOne({
+            _id: new ObjectId(id),
+          });
+          if (!parcel) {
+            return res.status(404).send({ message: "Parcel not found." });
+          }
+
+          // Add pickedAt or deliveredAt timestamp
+          if (deliveryStatus === "in_transit") {
+            updateFields.pickedAt = new Date().toISOString();
+          }
+
+          if (deliveryStatus === "delivered") {
+            updateFields.deliveredAt = new Date().toISOString();
+
+            // Calculate earning
+            const sameDistrict =
+              parcel.senderDistrict === parcel.receiverDistrict;
+            const totalCost = parseFloat(parcel.totalCost || 0);
+            const earning = sameDistrict ? totalCost * 0.8 : totalCost * 0.3;
+
+            // Update rider: add earnings, reset status to active
+            await ridersCollection.updateOne(
+              { email: parcel.assignedRiderEmail },
+              {
+                $set: { status: "active" },
+                $inc: {
+                  totalEarned: parseFloat(earning.toFixed(2)),
+                },
+              }
+            );
+          }
+
+          const result = await parcelsCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: updateFields }
+          );
+
+          res.send(result);
+        } catch (error) {
+          console.error("Failed to update parcel status:", error);
+          res.status(500).send({ message: "Failed to update parcel status." });
+        }
+      }
+    );
+
+    app.get( "/rider/wallet",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        const { email } = req.query;
+        if (!email) {
+          return res.status(400).send({ message: "Email is required" });
+        }
+
+        try {
+          const rider = await ridersCollection.findOne({ email });
+          if (!rider) {
+            return res.status(404).send({ message: "Rider not found." });
+          }
+
+          const totalEarned = rider.totalEarned || 0;
+          const amountWithdrawn = rider.amountWithdrawn || 0;
+          const amountAvailable = totalEarned - amountWithdrawn;
+
+          res.send({ totalEarned, amountWithdrawn, amountAvailable });
+        } catch (error) {
+          console.error("Wallet fetch error:", error);
+          res.status(500).send({ message: "Failed to fetch wallet info." });
+        }
+      }
+    );
+
+    app.post(  "/rider/cashout",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        const { email, amount } = req.body;
+
+        if (!email || typeof amount !== "number" || amount <= 0) {
+          return res.status(400).send({ message: "Invalid input." });
+        }
+
+        try {
+          const rider = await ridersCollection.findOne({ email });
+          if (!rider) {
+            return res.status(404).send({ message: "Rider not found." });
+          }
+
+          const totalEarned = rider.totalEarned || 0;
+          const amountWithdrawn = rider.amountWithdrawn || 0;
+          const amountAvailable = totalEarned - amountWithdrawn;
+
+          if (amount > amountAvailable) {
+            return res.status(400).send({ message: "Insufficient balance." });
+          }
+
+          const newAmountWithdrawn = parseFloat(
+            (amountWithdrawn + amount).toFixed(2)
+          );
+          const newAmountAvailable = parseFloat(
+            (totalEarned - newAmountWithdrawn).toFixed(2)
+          );
+
+          const result = await ridersCollection.updateOne(
+            { email },
+            {
+              $set: {
+                amountWithdrawn: newAmountWithdrawn,
+                amountAvailable: newAmountAvailable,
+              },
+            }
+          );
+
+          res.send({
+            message: "Cashout successful",
+            amountWithdrawn: newAmountWithdrawn,
+            amountAvailable: newAmountAvailable,
+            totalEarned,
+          });
+        } catch (error) {
+          console.error("Cashout error:", error);
+          res.status(500).send({ message: "Cashout failed." });
         }
       }
     );
