@@ -21,7 +21,7 @@ const MyParcels = () => {
   // Fetch user parcels
   const { data: parcels = [], refetch } = useQuery({
     queryKey: ["my-parcels", user?.email],
-      enabled: !!user?.email,
+    enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(`/parcels?email=${user?.email}`);
       return res.data;
@@ -165,7 +165,9 @@ const MyParcels = () => {
                   <div className="flex flex-wrap gap-1 md:gap-2 justify-start">
                     <button
                       className="btn btn-xs md:btn-sm btn-outline btn-info"
-                      onClick={() => handleView(parcel)}
+                      onClick={() =>
+                        navigate(`/dashboard/parcels/${parcel._id}`)
+                      }
                     >
                       <FaEye className="mr-1" /> View
                     </button>

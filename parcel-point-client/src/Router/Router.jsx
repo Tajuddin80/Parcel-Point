@@ -28,6 +28,7 @@ import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
 import PendingDeliveries from "../Pages/Dashboard/PendingDeliveries/PendingDeliveries";
 import RiderRoute from "../Routes/RiderRoutes";
 import CompletedDeliveries from "../Pages/Dashboard/CompletedDeliveries/CompletedDeliveries";
+import ParcelDetails from "../Pages/Dashboard/ParcelDetails/ParcelDetails";
 
 // Define loader function
 const homeLoader = async () => {
@@ -81,9 +82,9 @@ export const router = createBrowserRouter([
       {
         path: "be-a-rider",
         element: (
-          // <PrivateRoute>
+          <PrivateRoute>
           <BeARider />
-          // </PrivateRoute>
+           </PrivateRoute>
         ),
       },
       {
@@ -149,6 +150,10 @@ export const router = createBrowserRouter([
         element: <TrackParcel></TrackParcel>,
       },
 
+      {
+        path: "parcels/:id",
+        element: <ParcelDetails></ParcelDetails>,
+      },
       {
         path: "updateProfile",
         element: <UpdateProfile></UpdateProfile>,

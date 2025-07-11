@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
 import { FaSearch, FaMapMarkerAlt, FaClock, FaUser } from "react-icons/fa";
+import { useLocation } from "react-router";
 
 const TrackParcel = () => {
   const axiosSecure = useAxiosSecure();
-  const [trackingId, setTrackingId] = useState("");
-  const [submittedId, setSubmittedId] = useState(null);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTrackId = searchParams.get("track") || "";
+
+  const [trackingId, setTrackingId] = useState(initialTrackId);
+  const [submittedId, setSubmittedId] = useState(initialTrackId);
 
   const {
     data: trackingLogs = [],
@@ -21,6 +26,9 @@ const TrackParcel = () => {
       return res.data;
     },
     enabled: !!submittedId,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const handleSubmit = (e) => {
@@ -30,9 +38,15 @@ const TrackParcel = () => {
     }
   };
 
+  useEffect(() => {
+    if (initialTrackId) {
+      setSubmittedId(initialTrackId);
+    }
+  }, [initialTrackId]);
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10 bg-gray-100 rounded-xl shadow-md">
-      <h2 className="text-3xl font-bold mb-6 text-center text-primary"> Track Your Parcel</h2>
+    <div className="min-h-screen mx-auto px-4 py-10 bg-gray-100 rounded-xl shadow-md">
+      <h2 className="text-5xl font-bold mb-6 text-center text-primary"> Track Your Parcel</h2>
 
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 justify-center mb-10 px-2">
         <input
@@ -47,7 +61,7 @@ const TrackParcel = () => {
         </button>
       </form>
 
-      {(isPending || isFetching) && <Loader />}
+      {/* {(isPending || isFetching) && <Loader />} */}
 
       {!isPending && trackingLogs.length === 0 && submittedId && (
         <p className="text-center text-gray-600 text-lg">No tracking updates found for this ID.</p>

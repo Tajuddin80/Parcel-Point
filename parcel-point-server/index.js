@@ -34,6 +34,7 @@ async function run() {
     const paymentsCollection = db.collection("allPayments");
     const ridersCollection = db.collection("allRiders");
     const trackingsCollection = db.collection("allTrackings");
+    const roleRequestsCollection = db.collection("allRoleRequests");
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
@@ -140,7 +141,7 @@ async function run() {
     });
 
     // Get single parcel by id
-    app.get("/parcelData/:id", async (req, res) => {
+    app.get("/parcelData/:id", verifyFireBaseToken, async (req, res) => {
       const parcelId = req.params.id;
 
       try {
@@ -289,7 +290,7 @@ async function run() {
 
     // Get user by email search
     // Get users by email and/or role
-    app.get("/users/search", async (req, res) => {
+    app.get("/users/search", verifyFireBaseToken, async (req, res) => {
       const { email = "", role = "" } = req.query;
 
       // If neither email nor role is provided
@@ -708,8 +709,7 @@ async function run() {
       }
     );
 
-    app.post(
-      "/rider/cashout",
+    app.post( "/rider/cashout",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -763,10 +763,26 @@ async function run() {
       }
     );
 
+
+
+
+//  -------------------------------------------role request related apis-----------------------------------------------
+// POST: /roleRequests
+app.post("/roleRequests",verifyFireBaseToken, async (req, res) => {
+  const request = req.body;
+  try {
+    const result = await roleRequestsCollection.insertOne(request);
+    res.send({ success: true, insertedId: result.insertedId });
+  } catch (error) {
+    console.error("Error saving role request:", error);
+    res.status(500).send({ message: "Failed to submit role request" });
+  }
+});
+
     // --------------------------------------Tracking related api's -------------------------------------
 
     // get updats by tracking id
-    app.get("/trackings/:trackingId", async (req, res) => {
+    app.get("/trackings/:trackingId", verifyFireBaseToken, async (req, res) => {
       const trackingId = req.params.trackingId;
 
       const updates = await trackingsCollection
@@ -779,30 +795,28 @@ async function run() {
       res.send(updates);
     });
 
+    // GET /trackings?tracking_id=TRK-XYZ123
+    app.get("/trackings", verifyFireBaseToken, async (req, res) => {
+      try {
+        const tracking_id = req.query.tracking_id;
+        if (!tracking_id) {
+          return res.status(400).json({ message: "Tracking ID is required" });
+        }
 
- // GET /trackings?tracking_id=TRK-XYZ123
-app.get("/trackings", async (req, res) => {
-  try {
-    const tracking_id = req.query.tracking_id;
-    if (!tracking_id) {
-      return res.status(400).json({ message: "Tracking ID is required" });
-    }
+        const logs = await trackingsCollection
+          .find({ tracking_id })
+          .sort({ timestamp: 1 }) // ascending order
+          .toArray();
 
-    const logs = await trackingsCollection
-      .find({ tracking_id })
-      .sort({ timestamp: 1 }) // ascending order
-      .toArray();
+        res.send(logs);
+      } catch (error) {
+        console.error("Failed to fetch tracking logs:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
 
-    res.send(logs);
-  } catch (error) {
-    console.error("Failed to fetch tracking logs:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-
-    // post tracking updats 
-    app.post("/trackings", async (req, res) => {
+    // post tracking updats
+    app.post("/trackings", verifyFireBaseToken, async (req, res) => {
       const update = req.body;
 
       update.timestamp = new Date();
@@ -817,32 +831,32 @@ app.get("/trackings", async (req, res) => {
       res.status(201).send(result);
     });
 
-
     // to prevent multiple entry we can do IMPORTANT!
 
     // POST /trackings
-// app.post("/trackings", async (req, res) => {
-//   const { tracking_id, status, details, updated_by } = req.body;
+    
+    // app.post("/trackings", async (req, res) => {
+    //   const { tracking_id, status, details, updated_by } = req.body;
 
-//   try {
-//     const filter = { tracking_id, status };
-//     const update = {
-//       $set: {
-//         details,
-//         updated_by,
-//         updated_at: new Date(),
-//       },
-//     };
+    //   try {
+    //     const filter = { tracking_id, status };
+    //     const update = {
+    //       $set: {
+    //         details,
+    //         updated_by,
+    //         updated_at: new Date(),
+    //       },
+    //     };
 
-//     const options = { upsert: true }; // Create new if not exists, otherwise update
-//     const result = await db.collection("trackings").updateOne(filter, update, options);
+    //     const options = { upsert: true }; // Create new if not exists, otherwise update
+    //     const result = await db.collection("trackings").updateOne(filter, update, options);
 
-//     res.status(200).json({ message: "Tracking log saved", result });
-//   } catch (err) {
-//     console.error("Error logging tracking:", err);
-//     res.status(500).json({ error: "Failed to log tracking" });
-//   }
-// });
+    //     res.status(200).json({ message: "Tracking log saved", result });
+    //   } catch (err) {
+    //     console.error("Error logging tracking:", err);
+    //     res.status(500).json({ error: "Failed to log tracking" });
+    //   }
+    // });
 
     // --------------------------------------payent related apis here----------------------------------------------------
     // save payment in db
@@ -895,19 +909,23 @@ app.get("/trackings", async (req, res) => {
 
     // VVI:   write prompt in stripe.js AI : i want to create custom card payment system using react and node on the server
     // card payment intent related
-    app.post("/create-payment-intent", async (req, res) => {
-      const amountInCents = req.body.amountInCents;
-      try {
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount: amountInCents, // Amount in cents
-          currency: "usd",
-          payment_method_types: ["card"],
-        });
-        res.json({ clientSecret: paymentIntent.client_secret });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+    app.post(
+      "/create-payment-intent",
+      verifyFireBaseToken,
+      async (req, res) => {
+        const amountInCents = req.body.amountInCents;
+        try {
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: amountInCents, // Amount in cents
+            currency: "usd",
+            payment_method_types: ["card"],
+          });
+          res.json({ clientSecret: paymentIntent.client_secret });
+        } catch (error) {
+          res.status(500).json({ error: error.message });
+        }
       }
-    });
+    );
 
     app.get("/payments", verifyFireBaseToken, async (req, res) => {
       const userEmail = req.query.email;
