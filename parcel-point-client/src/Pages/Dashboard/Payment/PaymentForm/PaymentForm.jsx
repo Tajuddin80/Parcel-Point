@@ -13,13 +13,15 @@ const PaymentForm = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState(null);
   const [isError, setIsError] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // new state to disable button
   const axiosSecure = useAxiosSecure();
   const stripe = useStripe();
   const elements = useElements();
   const { parcelId } = useParams();
   const { user } = useAuth();
   const { logTracking } = useTrackingLogger();
-  // Use TanStack query to fetch parcel info
+
+  // Fetch parcel info using React Query
   const { isPending, data: parcelInfo = {} } = useQuery({
     queryKey: ["parcels", parcelId],
     enabled: !!user?.email,
@@ -29,54 +31,55 @@ const PaymentForm = () => {
     },
   });
 
-  // Show loading spinner while data is fetching
   if (isPending) {
-    return <Loader></Loader>;
+    return <Loader />;
   }
-  // console.log(parcelInfo);
 
   const amount = parcelInfo?.totalCost || 0;
-  const amountInCents = amount * 100; // convert in cent
+  const amountInCents = amount * 100; // convert to cents
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || isProcessing) return; // prevent if already processing
+
+    setIsProcessing(true); // disable button immediately
+
+    const card = elements.getElement(CardElement);
+    if (!card) {
+      setIsProcessing(false);
       return;
     }
 
-    const card = elements.getElement(CardElement);
-    if (!card) return;
+    try {
+      // Step 1: Create payment method
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card,
+      });
 
-    //  step 1: validate te card
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: "card",
-      card,
-    });
+      if (error) {
+        setIsError(true);
+        setMessage(error.message);
+        setIsProcessing(false);
+        return;
+      }
 
-    if (error) {
-      console.error(error.message);
-      setIsError(true);
-      setMessage(error.message);
-    } else {
-      // console.log("PaymentMethod:", paymentMethod);
       setIsError(false);
       setMessage("Payment method created successfully!");
 
-      //  step: 2 create payment intent
+      // Step 2: Create payment intent on server
       const res = await axiosSecure.post("/create-payment-intent", {
         amountInCents,
         parcelId,
       });
 
-      // console.log('res from intent :', res);
-
       const clientSecret = res?.data?.clientSecret;
 
-      // step 3: confirm payment
+      // Step 3: Confirm card payment
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: elements.getElement(CardElement),
+          card,
           billing_details: {
             name: user?.displayName,
             email: user?.email,
@@ -87,51 +90,54 @@ const PaymentForm = () => {
       if (result.error) {
         setIsError(true);
         setMessage(result.error.message);
-      } else {
-        if (result.paymentIntent.status === "succeeded") {
-          setIsError(false);
-          setMessage("Payment succeeded!");
-          // console.log("Payment succeeded!");
+        setIsProcessing(false);
+        return;
+      }
 
-          // console.log(result);
-          const transactionId = result.paymentIntent.id;
-          //  step 4:
-          const paymentDoc = {
-            parcelName: parcelInfo?.parcelName,
-            parcelId,
-            userName: user?.displayName,
-            email: user?.email,
-            amount: amount,
-            paymentMethod: result.paymentIntent.payment_method_types[0],
-            cardType: paymentMethod.card.brand,
-            transactionId,
-          };
+      if (result.paymentIntent.status === "succeeded") {
+        setIsError(false);
+        setMessage("Payment succeeded!");
 
-          const paymentRes = await axiosSecure.post("/payments", paymentDoc);
-          if (paymentRes.data.insertedId) {
-            Swal.fire({
-              title: "Payment Successful!",
-              html: `Transaction ID: <strong>${transactionId}</strong>`,
-              icon: "success",
-              confirmButtonText: "Go to My Parcels",
-            }).then(async (result) => {
-              if (result.isConfirmed) {
+        const transactionId = result.paymentIntent.id;
 
-                    // parcel tracking update
-                await logTracking({
-                  tracking_id: parcelInfo.trackingId,
-                  status: "payment done",
-                  details: `Created by ${user.displayName}`,
-                  updated_by: `Email: ${user.email}`,
-                });
+        // Step 4: Save payment info to backend
+        const paymentDoc = {
+          parcelName: parcelInfo?.parcelName,
+          parcelId,
+          userName: user?.displayName,
+          email: user?.email,
+          amount: amount,
+          paymentMethod: result.paymentIntent.payment_method_types[0],
+          cardType: paymentMethod.card.brand,
+          transactionId,
+        };
 
-                navigate("/dashboard/myParcels");
-              }
-            });
-          }
+        const paymentRes = await axiosSecure.post("/payments", paymentDoc);
+        if (paymentRes.data.insertedId) {
+          await Swal.fire({
+            title: "Payment Successful!",
+            html: `Transaction ID: <strong>${transactionId}</strong>`,
+            icon: "success",
+            confirmButtonText: "Go to My Parcels",
+          });
+
+          // Update tracking log
+          await logTracking({
+            tracking_id: parcelInfo.trackingId,
+            status: "payment done",
+            details: `Created by ${user.displayName}`,
+            updated_by: `Email: ${user.email}`,
+          });
+
+          // Navigate to parcels page
+          navigate("/dashboard/myParcels");
         }
       }
-      // TODO: Handle payment intent confirmation if needed
+    } catch (err) {
+      setIsError(true);
+      setMessage("An unexpected error occurred.");
+    } finally {
+      setIsProcessing(false); // re-enable button after process finishes
     }
   };
 
@@ -173,10 +179,10 @@ const PaymentForm = () => {
         </div>
         <button
           type="submit"
-          disabled={!stripe || amount === 0}
-          className="w-full bg-brand btn btn-primary text-white py-2 rounded-lg shadow-md hover:bg-brand-dark transition duration-300"
+          disabled={!stripe || amount === 0 || isProcessing} // disable while processing
+          className="w-full bg-brand btn btn-primary text-white py-2 rounded-lg shadow-md hover:bg-brand-dark transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Pay ৳{amount}
+          {isProcessing ? "Processing..." : `Pay ৳${amount}`}
         </button>
       </form>
     </motion.div>
