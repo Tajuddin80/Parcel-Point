@@ -410,7 +410,11 @@ async function run() {
       }
     );
 
-    // Rider related api's
+    // ----------------------------------------------Rider related api's-------------------------------------
+
+
+ 
+
     app.post("/riders", verifyFireBaseToken, async (req, res) => {
       const riderEmail = req.body.email;
       const newRider = req.body;
@@ -764,6 +768,324 @@ async function run() {
       }
     );
 
+     // ✅ Rider Dashboard API
+    app.get(
+      "/rider/dashboard",
+      verifyFireBaseToken,
+      verifyRider,
+      async (req, res) => {
+        try {
+          const riderEmail = req.query.email;
+          if (!riderEmail) {
+            return res
+              .status(400)
+              .send({ message: "Invalid or missing user email" });
+          }
+
+          const assigned = await parcelsCollection.countDocuments({
+            assignedRiderEmail: riderEmail,
+            deliveryStatus: { $in: ["rider_assigned", "in_transit"] },
+          });
+
+          const deliveredParcels = await parcelsCollection
+            .find({
+              assignedRiderEmail: riderEmail,
+              deliveryStatus: "delivered",
+            })
+            .toArray();
+
+          let earnings = 0;
+          deliveredParcels.forEach((parcel) => {
+            const cost = Number(parcel.totalCost);
+            if (!isNaN(cost)) {
+              earnings +=
+                parcel.senderDistrict === parcel.receiverDistrict
+                  ? cost * 0.8
+                  : cost * 0.3;
+            }
+          });
+
+          res.send({
+            assignedParcels: assigned,
+            deliveredParcels: deliveredParcels.length,
+            totalEarnings: parseFloat(earnings.toFixed(2)),
+          });
+        } catch (err) {
+          console.error("Rider dashboard error:", err);
+          res.status(500).send({ message: "Failed to fetch rider dashboard" });
+        }
+      }
+    );
+// --------------------------------------- admin analytics api ---------------------------------------------
+
+
+    // ✅ NEW ANALYTICS API for Admin Dashboard
+   app.get("/admin/analytics", verifyFireBaseToken, verifyAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+
+    const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const weekStart = new Date(todayStart);
+    weekStart.setUTCDate(weekStart.getUTCDate() - now.getUTCDay());
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+
+    // Helper function to create match stage with $toDate conversion for deliveredAt
+    const timeMatchStages = (start) => ({
+      $match: {
+        deliveryStatus: "delivered",
+        $expr: { $gte: [{ $toDate: "$deliveredAt" }, start] },
+      },
+    });
+
+    // Revenue pipeline unchanged except it filters for deliveryStatus and paymentStatus without date filtering
+    const revenuePipeline = [
+      { $match: { deliveryStatus: "delivered", paymentStatus: "paid" } },
+      {
+        $project: {
+          totalCost: 1,
+          sameDistrict: {
+            $eq: ["$senderDistrict", "$receiverDistrict"],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$totalCost" },
+          riderShare: {
+            $sum: {
+              $cond: [
+                "$sameDistrict",
+                { $multiply: ["$totalCost", 0.8] },
+                { $multiply: ["$totalCost", 0.3] },
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+          riderShare: 1,
+          adminShare: { $subtract: ["$totalRevenue", "$riderShare"] },
+        },
+      },
+    ];
+
+    // Run all aggregation calls in parallel
+    const [today, week, month, year, revenue] = await Promise.all([
+      parcelsCollection.aggregate([timeMatchStages(todayStart), { $count: "total" }]).toArray(),
+      parcelsCollection.aggregate([timeMatchStages(weekStart), { $count: "total" }]).toArray(),
+      parcelsCollection.aggregate([timeMatchStages(monthStart), { $count: "total" }]).toArray(),
+      parcelsCollection.aggregate([timeMatchStages(yearStart), { $count: "total" }]).toArray(),
+      parcelsCollection.aggregate(revenuePipeline).toArray(),
+    ]);
+
+    const riderStatuses = await ridersCollection.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]).toArray();
+
+    const pendingRequests = await roleRequestsCollection.countDocuments();
+
+    res.send({
+      deliveries: {
+        today: today[0]?.total || 0,
+        week: week[0]?.total || 0,
+        month: month[0]?.total || 0,
+        year: year[0]?.total || 0,
+      },
+      revenue: revenue[0] || {
+        totalRevenue: 0,
+        riderShare: 0,
+        adminShare: 0,
+      },
+      riders: riderStatuses.reduce((acc, r) => {
+        acc[r._id] = r.count;
+        return acc;
+      }, {}),
+      pendingRoleRequests: pendingRequests,
+    });
+  } catch (err) {
+    console.error("Failed to load analytics:", err);
+    res.status(500).send({ message: "Failed to load analytics." });
+  }
+});
+
+
+app.get("/dashboard/delivery-stats", verifyFireBaseToken, verifyAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const thisWeek = new Date(today);
+    thisWeek.setUTCDate(today.getUTCDate() - now.getUTCDay());
+    const thisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const thisYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+
+    // Count documents with date conversion using $expr + $toDate
+    const [day, week, month, year] = await Promise.all([
+      parcelsCollection.countDocuments({
+        deliveryStatus: "delivered",
+        $expr: { $gte: [{ $toDate: "$deliveredAt" }, today] },
+      }),
+      parcelsCollection.countDocuments({
+        deliveryStatus: "delivered",
+        $expr: { $gte: [{ $toDate: "$deliveredAt" }, thisWeek] },
+      }),
+      parcelsCollection.countDocuments({
+        deliveryStatus: "delivered",
+        $expr: { $gte: [{ $toDate: "$deliveredAt" }, thisMonth] },
+      }),
+      parcelsCollection.countDocuments({
+        deliveryStatus: "delivered",
+        $expr: { $gte: [{ $toDate: "$deliveredAt" }, thisYear] },
+      }),
+    ]);
+
+    res.send({
+      today: day,
+      week,
+      month,
+      year,
+    });
+  } catch (err) {
+    console.error("Error in delivery stats:", err);
+    res.status(500).send({ message: "Failed to fetch delivery stats" });
+  }
+});
+
+
+
+
+
+
+
+
+
+    app.get(
+      "/dashboard/parcel-summary",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const result = await parcelsCollection
+            .aggregate([
+              {
+                $group: {
+                  _id: "$deliveryStatus",
+                  count: { $sum: 1 },
+                },
+              },
+            ])
+            .toArray();
+
+          res.send(result);
+        } catch (error) {
+          console.error("Error in parcel summary:", error);
+          res.status(500).send({ message: "Failed to fetch parcel summary" });
+        }
+      }
+    );
+
+    app.get(
+      "/dashboard/revenue-summary",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const deliveredParcels = await parcelsCollection
+            .find({
+              deliveryStatus: {
+                $in: ["delivered", "service_center_delivered"],
+              },
+            })
+            .toArray();
+
+          let riderEarnings = 0;
+          let adminEarnings = 0;
+
+          deliveredParcels.forEach((parcel) => {
+            const cost = parseFloat(parcel.totalCost || 0);
+            const isSameDistrict =
+              parcel.senderDistrict === parcel.receiverDistrict;
+
+            if (isSameDistrict) {
+              riderEarnings += cost * 0.8;
+              adminEarnings += cost * 0.2;
+            } else {
+              riderEarnings += cost * 0.3;
+              adminEarnings += cost * 0.7;
+            }
+          });
+
+          res.send({
+            totalRevenue: riderEarnings + adminEarnings,
+            riderEarnings: parseFloat(riderEarnings.toFixed(2)),
+            adminEarnings: parseFloat(adminEarnings.toFixed(2)),
+          });
+        } catch (error) {
+          console.error("Revenue summary error:", error);
+          res.status(500).send({ message: "Failed to fetch revenue summary" });
+        }
+      }
+    );
+
+    
+
+    app.get(
+      "/dashboard/role-requests",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const result = await roleRequestsCollection
+            .aggregate([
+              {
+                $group: {
+                  _id: "$requestedRole",
+                  count: { $sum: 1 },
+                },
+              },
+            ])
+            .toArray();
+
+          res.send(result);
+        } catch (error) {
+          console.error("Role request summary failed:", error);
+          res.status(500).send({ message: "Failed to fetch role requests" });
+        }
+      }
+    );
+
+    app.get(
+      "/dashboard/rider-activity",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const active = await ridersCollection.countDocuments({
+            status: "active",
+          });
+          const inDelivery = await ridersCollection.countDocuments({
+            status: "in-delivery",
+          });
+
+          res.send({ active, inDelivery });
+        } catch (error) {
+          console.error("Failed to fetch rider activity:", error);
+          res.status(500).send({ message: "Failed to load rider stats" });
+        }
+      }
+    );
+
+
     //  -------------------------------------------role request related apis-----------------------------------------------
     // POST: /roleRequests
     app.post("/roleRequests", verifyFireBaseToken, async (req, res) => {
@@ -829,32 +1151,7 @@ async function run() {
       res.status(201).send(result);
     });
 
-    // to prevent multiple entry we can do IMPORTANT!
-
-    // POST /trackings
-
-    // app.post("/trackings", async (req, res) => {
-    //   const { tracking_id, status, details, updated_by } = req.body;
-
-    //   try {
-    //     const filter = { tracking_id, status };
-    //     const update = {
-    //       $set: {
-    //         details,
-    //         updated_by,
-    //         updated_at: new Date(),
-    //       },
-    //     };
-
-    //     const options = { upsert: true }; // Create new if not exists, otherwise update
-    //     const result = await db.collection("trackings").updateOne(filter, update, options);
-
-    //     res.status(200).json({ message: "Tracking log saved", result });
-    //   } catch (err) {
-    //     console.error("Error logging tracking:", err);
-    //     res.status(500).json({ error: "Failed to log tracking" });
-    //   }
-    // });
+   
 
     // --------------------------------------payent related apis here----------------------------------------------------
     // save payment in db
@@ -941,6 +1238,11 @@ async function run() {
         res.status(500).send({ message: "Failed to load payment history" });
       }
     });
+
+
+
+
+  
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
