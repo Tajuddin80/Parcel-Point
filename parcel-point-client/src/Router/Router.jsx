@@ -18,7 +18,6 @@ import Payment from "../Pages/Dashboard/Payment/Payment";
 import PaymentHistory from "../Pages/Dashboard/PaymentHistory/PaymentHistory";
 import UpdateProfile from "../Pages/Dashboard/UpdateProfile/UpdateProfile";
 import TrackParcel from "../Pages/Dashboard/TrackParcel/TrackParcel";
-import Dashboard from "../Pages/Dashboard/Dashboard/Dasboard";
 import PendingRiders from "../Pages/Dashboard/PendingRiders/PendingRiders";
 import ActiveRiders from "../Pages/Dashboard/ActiveRiders/ActiveRiders";
 import MakeAdmin from "../Pages/Dashboard/MakeAdmin/MakeAdmin";
@@ -29,6 +28,8 @@ import PendingDeliveries from "../Pages/Dashboard/PendingDeliveries/PendingDeliv
 import RiderRoute from "../Routes/RiderRoutes";
 import CompletedDeliveries from "../Pages/Dashboard/CompletedDeliveries/CompletedDeliveries";
 import ParcelDetails from "../Pages/Dashboard/ParcelDetails/ParcelDetails";
+import AccordionSlider from "../Pages/Dashboard/AccordionSlider";
+import DasboardHome from "../Pages/Dashboard/DashboardHome/DasboardHome";
 
 // Define loader function
 const homeLoader = async () => {
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
           // </PrivateRoute>
         ),
       },
+      // {
+      //   path: "slider",
+      //   element: <AccordionSlider></AccordionSlider>,
+      // },
       {
         path: "forbidden",
         element: <Forbidden></Forbidden>,
@@ -135,7 +140,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard></Dashboard>,
+        element: <DasboardHome></DasboardHome>,
       },
       {
         path: "myParcels",

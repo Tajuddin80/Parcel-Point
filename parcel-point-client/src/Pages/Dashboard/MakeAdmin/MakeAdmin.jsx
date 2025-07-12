@@ -41,6 +41,7 @@ const MakeAdmin = () => {
     },
   });
 
+  if (isPending || isFetching) return <Loader />;
   const handleRoleChange = (id, newRole) => {
     Swal.fire({
       title: `Are you sure?`,

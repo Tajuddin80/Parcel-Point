@@ -36,7 +36,7 @@ const BangladeshMap = ({ warehouseData, searchFocusDistrict }) => (
   <div className="w-full h-[70vh] rounded-xl overflow-hidden shadow-lg">
     <MapContainer
       center={[23.685, 90.3563]} // Bangladesh centroid
-      zoom={7}
+      zoom={10}
       scrollWheelZoom={false}
       className="h-full w-full"
     >

@@ -3,14 +3,16 @@ import Typewriter from "typewriter-effect";
 import { FaBoxOpen, FaMapMarkedAlt, FaSmile } from "react-icons/fa";
 import { motion } from "framer-motion";
 import useAuth from "../../../hooks/useAuth";
+import useUserRole from "../../../hooks/useUserRole";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-const Dashboard = () => {
+const DasboardHome = () => {
   const { user } = useAuth();
+  const { roleLoading, role} = useUserRole()
 
   return (
     <div className="min-h-screen w-full p-6 flex flex-col justify-center items-center space-y-12 bg-base-100">
@@ -93,4 +95,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default DasboardHome;

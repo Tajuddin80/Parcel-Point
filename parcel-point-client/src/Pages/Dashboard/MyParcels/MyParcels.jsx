@@ -28,11 +28,7 @@ const MyParcels = () => {
     },
   });
 
-  // Handlers
-  const handleView = (parcel) => {
-    console.log("View:", parcel);
-    // Future: modal or detail page
-  };
+ 
 
   const handlePay = (parcel) => {
     navigate(`/dashboard/payment/${parcel._id}`);

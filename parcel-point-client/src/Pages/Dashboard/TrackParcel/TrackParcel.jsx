@@ -38,6 +38,8 @@ const TrackParcel = () => {
     }
   };
 
+ 
+
   useEffect(() => {
     if (initialTrackId) {
       setSubmittedId(initialTrackId);
@@ -61,7 +63,7 @@ const TrackParcel = () => {
         </button>
       </form>
 
-      {/* {(isPending || isFetching) && <Loader />} */}
+      {(isPending || isFetching) && <Loader />}
 
       {!isPending && trackingLogs.length === 0 && submittedId && (
         <p className="text-center text-gray-600 text-lg">No tracking updates found for this ID.</p>

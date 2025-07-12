@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import warehouseData from "../../assets/warehouses.json";
+import Swal from "sweetalert2";
 
 const PricingCalculator = () => {
   const [parcelType, setParcelType] = useState("");
@@ -21,14 +22,16 @@ const PricingCalculator = () => {
   const [receiverWarehouses, setReceiverWarehouses] = useState([]);
 
   useEffect(() => {
-    const uniqueRegions = Array.from(new Set(warehouseData.map(w => w.region)));
+    const uniqueRegions = Array.from(
+      new Set(warehouseData.map((w) => w.region))
+    );
     setRegions(uniqueRegions);
   }, []);
 
   useEffect(() => {
     if (senderRegion) {
-      const filtered = warehouseData.filter(w => w.region === senderRegion);
-      setSenderDistricts([...new Set(filtered.map(w => w.district))]);
+      const filtered = warehouseData.filter((w) => w.region === senderRegion);
+      setSenderDistricts([...new Set(filtered.map((w) => w.district))]);
       setSenderDistrict("");
       setSenderWarehouse("");
       setSenderWarehouses([]);
@@ -37,7 +40,9 @@ const PricingCalculator = () => {
 
   useEffect(() => {
     if (senderRegion && senderDistrict) {
-      const entry = warehouseData.find(w => w.region === senderRegion && w.district === senderDistrict);
+      const entry = warehouseData.find(
+        (w) => w.region === senderRegion && w.district === senderDistrict
+      );
       setSenderWarehouses(entry?.covered_area || []);
       setSenderWarehouse("");
     }
@@ -45,8 +50,8 @@ const PricingCalculator = () => {
 
   useEffect(() => {
     if (receiverRegion) {
-      const filtered = warehouseData.filter(w => w.region === receiverRegion);
-      setReceiverDistricts([...new Set(filtered.map(w => w.district))]);
+      const filtered = warehouseData.filter((w) => w.region === receiverRegion);
+      setReceiverDistricts([...new Set(filtered.map((w) => w.district))]);
       setReceiverDistrict("");
       setReceiverWarehouse("");
       setReceiverWarehouses([]);
@@ -55,14 +60,24 @@ const PricingCalculator = () => {
 
   useEffect(() => {
     if (receiverRegion && receiverDistrict) {
-      const entry = warehouseData.find(w => w.region === receiverRegion && w.district === receiverDistrict);
+      const entry = warehouseData.find(
+        (w) => w.region === receiverRegion && w.district === receiverDistrict
+      );
       setReceiverWarehouses(entry?.covered_area || []);
       setReceiverWarehouse("");
     }
   }, [receiverRegion, receiverDistrict]);
 
   const calculateCost = () => {
-    if (!parcelType || !senderRegion || !receiverRegion || !senderDistrict || !receiverDistrict || !senderWarehouse || !receiverWarehouse) {
+    if (
+      !parcelType ||
+      !senderRegion ||
+      !receiverRegion ||
+      !senderDistrict ||
+      !receiverDistrict ||
+      !senderWarehouse ||
+      !receiverWarehouse
+    ) {
       setCost(null);
       setDetails("");
       return;
@@ -73,7 +88,13 @@ const PricingCalculator = () => {
       senderDistrict === receiverDistrict &&
       senderWarehouse === receiverWarehouse
     ) {
-      alert("Sender and receiver address cannot be exactly the same.");
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Address",
+        text: "Sender and receiver address cannot be exactly the same.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       setCost(null);
       setDetails("");
       return;
@@ -98,7 +119,9 @@ const PricingCalculator = () => {
         finalCost = isSameRegion ? 110 : 150;
         breakdown = `📦 <strong>Non-Document</strong><br>
         Weight: ${weightKg}kg<br>
-        Base Price (up to 3kg): ${isSameRegion ? "Within Region ৳110" : "Outside Region ৳150"}`;
+        Base Price (up to 3kg): ${
+          isSameRegion ? "Within Region ৳110" : "Outside Region ৳150"
+        }`;
       } else {
         const extraKg = weightKg - 3;
         if (isSameRegion) {
@@ -137,9 +160,13 @@ const PricingCalculator = () => {
 
   return (
     <section className="w-[95vw] mx-auto p-4 md:p-8">
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Pricing Calculator</h1>
+      <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
+        Pricing Calculator
+      </h1>
       <p className="text-lg text-gray-500 mb-6">
-        Enjoy fast, reliable parcel delivery with real-time tracking and zero hassle. From personal packages to business shipments — we deliver on time, every time.
+        Enjoy fast, reliable parcel delivery with real-time tracking and zero
+        hassle. From personal packages to business shipments — we deliver on
+        time, every time.
       </p>
       <div className="border-b mb-6"></div>
 
@@ -148,7 +175,10 @@ const PricingCalculator = () => {
           {cost !== null ? `${cost} Tk` : "—"}
         </div>
         {cost !== null && (
-          <div className="mt-4 text-gray-700 text-lg" dangerouslySetInnerHTML={{ __html: details }}></div>
+          <div
+            className="mt-4 text-gray-700 text-lg"
+            dangerouslySetInnerHTML={{ __html: details }}
+          ></div>
         )}
       </div>
 
@@ -157,24 +187,42 @@ const PricingCalculator = () => {
         <div>
           <h2 className="text-2xl font-semibold mb-4">Sender Information</h2>
           <div className="space-y-4">
-            <select value={senderRegion} onChange={e => setSenderRegion(e.target.value)} className="w-full p-3 border rounded text-lg">
+            <select
+              value={senderRegion}
+              onChange={(e) => setSenderRegion(e.target.value)}
+              className="w-full p-3 border rounded text-lg"
+            >
               <option value="">Select Sender Region</option>
               {regions.map((r, idx) => (
-                <option key={idx} value={r}>{r}</option>
+                <option key={idx} value={r}>
+                  {r}
+                </option>
               ))}
             </select>
 
-            <select value={senderDistrict} onChange={e => setSenderDistrict(e.target.value)} className="w-full p-3 border rounded text-lg">
+            <select
+              value={senderDistrict}
+              onChange={(e) => setSenderDistrict(e.target.value)}
+              className="w-full p-3 border rounded text-lg"
+            >
               <option value="">Select Sender District</option>
               {senderDistricts.map((d, idx) => (
-                <option key={idx} value={d}>{d}</option>
+                <option key={idx} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
 
-            <select value={senderWarehouse} onChange={e => setSenderWarehouse(e.target.value)} className="w-full p-3 border rounded text-lg">
+            <select
+              value={senderWarehouse}
+              onChange={(e) => setSenderWarehouse(e.target.value)}
+              className="w-full p-3 border rounded text-lg"
+            >
               <option value="">Select Sender Warehouse</option>
               {senderWarehouses.map((w, idx) => (
-                <option key={idx} value={w}>{w}</option>
+                <option key={idx} value={w}>
+                  {w}
+                </option>
               ))}
             </select>
           </div>
@@ -184,24 +232,42 @@ const PricingCalculator = () => {
         <div>
           <h2 className="text-2xl font-semibold mb-4">Receiver Information</h2>
           <div className="space-y-4">
-            <select value={receiverRegion} onChange={e => setReceiverRegion(e.target.value)} className="w-full p-3 border rounded text-lg">
+            <select
+              value={receiverRegion}
+              onChange={(e) => setReceiverRegion(e.target.value)}
+              className="w-full p-3 border rounded text-lg"
+            >
               <option value="">Select Receiver Region</option>
               {regions.map((r, idx) => (
-                <option key={idx} value={r}>{r}</option>
+                <option key={idx} value={r}>
+                  {r}
+                </option>
               ))}
             </select>
 
-            <select value={receiverDistrict} onChange={e => setReceiverDistrict(e.target.value)} className="w-full p-3 border rounded text-lg">
+            <select
+              value={receiverDistrict}
+              onChange={(e) => setReceiverDistrict(e.target.value)}
+              className="w-full p-3 border rounded text-lg"
+            >
               <option value="">Select Receiver District</option>
               {receiverDistricts.map((d, idx) => (
-                <option key={idx} value={d}>{d}</option>
+                <option key={idx} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
 
-            <select value={receiverWarehouse} onChange={e => setReceiverWarehouse(e.target.value)} className="w-full p-3 border rounded text-lg">
+            <select
+              value={receiverWarehouse}
+              onChange={(e) => setReceiverWarehouse(e.target.value)}
+              className="w-full p-3 border rounded text-lg"
+            >
               <option value="">Select Receiver Warehouse</option>
               {receiverWarehouses.map((w, idx) => (
-                <option key={idx} value={w}>{w}</option>
+                <option key={idx} value={w}>
+                  {w}
+                </option>
               ))}
             </select>
           </div>
@@ -212,7 +278,11 @@ const PricingCalculator = () => {
       <div className="mt-6 space-y-4">
         <div>
           <label className="block mb-1 font-semibold">Parcel Type</label>
-          <select value={parcelType} onChange={e => setParcelType(e.target.value)} className="w-full p-3 border rounded text-lg">
+          <select
+            value={parcelType}
+            onChange={(e) => setParcelType(e.target.value)}
+            className="w-full p-3 border rounded text-lg"
+          >
             <option value="">Select Parcel Type</option>
             <option value="Document">Document</option>
             <option value="Non-Document">Non-Document</option>
@@ -227,7 +297,7 @@ const PricingCalculator = () => {
               min="0"
               step="0.01"
               value={weight}
-              onChange={e => setWeight(e.target.value)}
+              onChange={(e) => setWeight(e.target.value)}
               className="w-full p-3 border rounded text-lg"
               placeholder="Enter weight"
             />
@@ -235,8 +305,18 @@ const PricingCalculator = () => {
         )}
 
         <div className="flex gap-2">
-          <button onClick={resetForm} className="border border-lime-500 text-lime-600 px-6 py-3 rounded hover:bg-lime-50 text-lg font-medium">Reset</button>
-          <button onClick={calculateCost} className="bg-lime-500 text-white px-6 py-3 rounded hover:bg-lime-600 text-lg font-medium">Calculate</button>
+          <button
+            onClick={resetForm}
+            className="border border-lime-500 text-lime-600 px-6 py-3 rounded hover:bg-lime-50 text-lg font-medium"
+          >
+            Reset
+          </button>
+          <button
+            onClick={calculateCost}
+            className="bg-lime-500 text-white px-6 py-3 rounded hover:bg-lime-600 text-lg font-medium"
+          >
+            Calculate
+          </button>
         </div>
       </div>
     </section>

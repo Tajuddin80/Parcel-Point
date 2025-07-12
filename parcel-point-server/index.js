@@ -709,7 +709,8 @@ async function run() {
       }
     );
 
-    app.post( "/rider/cashout",
+    app.post(
+      "/rider/cashout",
       verifyFireBaseToken,
       verifyRider,
       async (req, res) => {
@@ -763,21 +764,18 @@ async function run() {
       }
     );
 
-
-
-
-//  -------------------------------------------role request related apis-----------------------------------------------
-// POST: /roleRequests
-app.post("/roleRequests",verifyFireBaseToken, async (req, res) => {
-  const request = req.body;
-  try {
-    const result = await roleRequestsCollection.insertOne(request);
-    res.send({ success: true, insertedId: result.insertedId });
-  } catch (error) {
-    console.error("Error saving role request:", error);
-    res.status(500).send({ message: "Failed to submit role request" });
-  }
-});
+    //  -------------------------------------------role request related apis-----------------------------------------------
+    // POST: /roleRequests
+    app.post("/roleRequests", verifyFireBaseToken, async (req, res) => {
+      const request = req.body;
+      try {
+        const result = await roleRequestsCollection.insertOne(request);
+        res.send({ success: true, insertedId: result.insertedId });
+      } catch (error) {
+        console.error("Error saving role request:", error);
+        res.status(500).send({ message: "Failed to submit role request" });
+      }
+    });
 
     // --------------------------------------Tracking related api's -------------------------------------
 
@@ -834,7 +832,7 @@ app.post("/roleRequests",verifyFireBaseToken, async (req, res) => {
     // to prevent multiple entry we can do IMPORTANT!
 
     // POST /trackings
-    
+
     // app.post("/trackings", async (req, res) => {
     //   const { tracking_id, status, details, updated_by } = req.body;
 
