@@ -3,9 +3,13 @@ import React from "react";
 import { Link } from "react-router";
 import ErrorLottie from '../../assets/animations/404.json'
 import Lottie from "lottie-react";
+import { Helmet } from "react-helmet";
 const ErrorPage = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 md:p-10 rounded-3xl shadow-lg bg-white">
+      <Helmet>
+        <title>Parcel Point | 404</title>
+      </Helmet>
       <div className="w-full max-w-md md:max-w-lg mx-auto my-5">
         {/* <img
           src={errorImg}

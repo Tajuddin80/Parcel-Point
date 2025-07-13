@@ -8,6 +8,7 @@ import GoogleSignButton from "../GoogleSignButton/GoogleSignButton";
 import { updateProfile } from "firebase/auth";
 import { imageUpload } from "../../../api/utils";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
+import { Helmet } from "react-helmet";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -112,6 +113,9 @@ if (userRes.data.inserted || userRes.data.updated) {
   return (
     <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-8">
       <div className="w-full max-w-md">
+        <Helmet>
+        <title>Parcel Point | Signup</title>
+      </Helmet>
         <h2 className="text-4xl font-bold mb-2">Create an Account</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

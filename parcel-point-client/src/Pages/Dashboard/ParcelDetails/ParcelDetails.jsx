@@ -50,6 +50,9 @@ const ParcelDetails = () => {
 
   return (
     <div className="max-w-6xl mx-auto bg-white p-10 shadow-xl rounded-2xl my-12">
+      <Helmet>
+        <title>Parcel Point | Parcel Details</title>
+      </Helmet>
       <button
         onClick={() => navigate('/dashboard/myParcels')}
         className="mb-8 text-black btn font-semibold flex items-center gap-2 hover:underline text-lg"

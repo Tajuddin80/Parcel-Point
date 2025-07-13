@@ -1,4 +1,5 @@
 import useUserRole from "../../../hooks/useUserRole";
+import Forbidden from "../../Forbidden/Forbidden";
 import Loader from "../../shared/Loader/Loader";
 import AdminDashboard from "./AdminDashboard";
 import RiderDashboard from "./RiderDashboard";
@@ -13,9 +14,15 @@ const DashboardHome = () => {
     return <Loader></Loader>;
   }
 
-  if (role === "admin") return <AdminDashboard />;
-  if (role === "rider") return <RiderDashboard />;
-  return <UserDashboard />;
+  if (role === "admin") {
+    return <AdminDashboard />;
+  } else if (role === "rider") {
+    return <RiderDashboard />;
+  } else if (role === "usr") {
+    return <UserDashboard />;
+  } else {
+    return <Forbidden></Forbidden>;
+  }
 };
 
 export default DashboardHome;

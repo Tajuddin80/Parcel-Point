@@ -12,6 +12,7 @@ import {
   FaTrash,
   FaWeightHanging,
 } from "react-icons/fa";
+import { Helmet } from "react-helmet";
 
 const MyParcels = () => {
   const axiosSecure = useAxiosSecure();
@@ -65,6 +66,9 @@ const MyParcels = () => {
 
   return (
     <div className="p-2 space-y-8">
+      <Helmet>
+        <title>Parcel Point | My Parcels</title>
+      </Helmet>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="stat bg-base-200 rounded shadow">

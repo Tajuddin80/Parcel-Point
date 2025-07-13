@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BangladeshMap from "./BangladeshMap";
+import { Helmet } from "react-helmet";
 
 const CoveragePage = () => {
   const [query, setQuery] = useState("");
@@ -27,9 +28,12 @@ const CoveragePage = () => {
     setFocusDistrict(found || null);
   };
 
-  // ─── UI ───────────────────────────────────────────────────────────────────────
+  // ─── UI ──────────────────────────────────────────────────────────────────────
   return (
     <div className="p-4 my-10">
+      <Helmet>
+        <title>Parcel Point | Coverage</title>
+      </Helmet>
       <h1 className="text-[#03373D] text-2xl md:text-4xl font-bold mb-6">
         We are available in 64 districts
       </h1>

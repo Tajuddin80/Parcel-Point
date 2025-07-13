@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "../../shared/Loader/Loader";
+import { Helmet } from "react-helmet";
 
 const PendingRiders = () => {
   const [selectedRider, setSelectedRider] = useState(null);
@@ -96,6 +97,9 @@ const PendingRiders = () => {
       <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-[#03373D]">
         Pending Riders
       </h2>
+       <Helmet>
+        <title>Parcel Point | Pending Riders</title>
+      </Helmet>
 
       <div className="overflow-x-auto rounded-xl shadow border">
         <table className="table table-zebra w-full text-base md:text-lg">

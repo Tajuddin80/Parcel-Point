@@ -3,6 +3,7 @@ import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "../../shared/Loader/Loader";
+import { Helmet } from "react-helmet";
 
 const PaymentHistory = () => {
   const { user } = useAuth();
@@ -19,7 +20,9 @@ const PaymentHistory = () => {
     return <Loader></Loader>;
   }
   return (
-    <>
+    <><Helmet>
+        <title>Parcel Point | Payment History</title>
+      </Helmet>
       <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 mt-6">
         <table className="table table-zebra w-full text-sm md:text-base">
           <thead className="text-white bg-[#03373D] text-xs md:text-sm uppercase">

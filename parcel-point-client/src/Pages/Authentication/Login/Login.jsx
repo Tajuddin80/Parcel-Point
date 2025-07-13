@@ -4,6 +4,7 @@ import GoogleSignButton from "../GoogleSignButton/GoogleSignButton";
 import useAuth from "../../../hooks/useAuth";
 import Swal from "sweetalert2";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
+import { Helmet } from "react-helmet";
 
 const Login = () => {
   const { signIn } = useAuth();
@@ -77,6 +78,9 @@ const Login = () => {
 
   return (
     <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-8">
+      <Helmet>
+        <title>Parcel Point | Login</title>
+      </Helmet>
       <div className="w-full max-w-md">
         <h2 className="text-4xl font-bold mb-2">Welcome back</h2>
 

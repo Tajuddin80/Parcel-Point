@@ -53,11 +53,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "pricingCalculator",
-        element: (
-          // <PrivateRoute>
-          <PricingCalculator />
-          // </PrivateRoute>
-        ),
+        element: <PricingCalculator />,
       },
       // {
       //   path: "slider",
@@ -79,17 +75,17 @@ export const router = createBrowserRouter([
       {
         path: "coverage",
         element: (
-          // <PrivateRoute>
+          
           <CoveragePage />
-          // </PrivateRoute>
+        
         ),
       },
       {
         path: "be-a-rider",
         element: (
           <PrivateRoute>
-          <BeARider />
-           </PrivateRoute>
+            <BeARider />
+          </PrivateRoute>
         ),
       },
       {

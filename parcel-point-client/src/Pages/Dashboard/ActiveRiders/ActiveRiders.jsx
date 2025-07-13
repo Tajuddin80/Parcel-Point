@@ -4,6 +4,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
 import useAuth from "../../../hooks/useAuth";
 import Swal from "sweetalert2";
+import { Helmet } from "react-helmet";
 
 const ActiveRiders = () => {
   const axiosSecure = useAxiosSecure();
@@ -68,6 +69,9 @@ const ActiveRiders = () => {
 
   return (
     <div className="">
+       <Helmet>
+        <title>Parcel Point | Active Riders</title>
+      </Helmet>
       <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-[#03373D]">
         Active Riders
       </h2>

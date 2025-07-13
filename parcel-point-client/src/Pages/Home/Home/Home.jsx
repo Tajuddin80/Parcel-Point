@@ -11,6 +11,7 @@ import FAQSection from "../FAQSection/FAQSection";
 const Home = () => {
   return (
     <>
+    
       <Banner></Banner>
       <HowItWorks></HowItWorks>
       <ServiceSection></ServiceSection>

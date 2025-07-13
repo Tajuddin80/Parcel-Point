@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
+import { Helmet } from "react-helmet";
 
 const MakeAdmin = () => {
   const axiosSecure = useAxiosSecure();
@@ -60,6 +61,9 @@ const MakeAdmin = () => {
 
   return (
     <section className="p-6 bg-white rounded-xl shadow-md">
+       <Helmet>
+        <title>Parcel Point | Make Admin</title>
+      </Helmet>
       <h2 className="text-2xl font-bold text-[#03373D] mb-4">Make Admin</h2>
 
       {/* Filters */}

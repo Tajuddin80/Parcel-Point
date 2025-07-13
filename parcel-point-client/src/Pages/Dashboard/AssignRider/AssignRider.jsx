@@ -11,6 +11,7 @@ import {
   FaMotorcycle,
 } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
+import { Helmet } from "react-helmet";
 
 const AssignRider = () => {
   const axiosSecure = useAxiosSecure();
@@ -79,6 +80,9 @@ const AssignRider = () => {
       <h2 className="text-3xl font-bold text-center text-[#03373D] mb-6">
         Parcels Ready to Assign Riders
       </h2>
+       <Helmet>
+        <title>Parcel Point | Assign Rider</title>
+      </Helmet>
 
       {parcels.length === 0 ? (
         <p className="text-center text-gray-500 text-lg">

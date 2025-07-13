@@ -5,6 +5,7 @@ import { FaMoneyBillWave, FaWallet } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
+import { Helmet } from "react-helmet";
 
 const CompletedDeliveries = () => {
   const { user } = useAuth();
@@ -69,6 +70,9 @@ const CompletedDeliveries = () => {
 
   return (
     <div className="">
+       <Helmet>
+        <title>Parcel Point | Completed Deliveries</title>
+      </Helmet>
       <h1 className="text-4xl font-bold text-center mb-6 flex items-center justify-center gap-2">
         Completed Deliveries
       </h1>

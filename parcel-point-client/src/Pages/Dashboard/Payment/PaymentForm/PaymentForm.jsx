@@ -8,6 +8,7 @@ import useAuth from "../../../../hooks/useAuth";
 import Swal from "sweetalert2";
 import Loader from "../../../shared/Loader/Loader";
 import useTrackingLogger from "../../../../hooks/useTrackingLogger";
+import { Helmet } from "react-helmet";
 
 const PaymentForm = () => {
   const navigate = useNavigate();
@@ -148,6 +149,9 @@ const PaymentForm = () => {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="max-w-md mx-auto mt-10 p-6 bg-white shadow-2xl rounded-2xl"
     >
+       <Helmet>
+        <title>Parcel Point | Payment</title>
+      </Helmet>
       <h2 className="text-2xl font-bold mb-4 text-center text-brand">
         Pay For Your Parcel
       </h2>

@@ -5,6 +5,7 @@ import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
 import useTrackingLogger from "../../../hooks/useTrackingLogger";
+import { Helmet } from "react-helmet";
 
 const PendingDeliveries = () => {
   const { user } = useAuth();
@@ -73,6 +74,9 @@ const { logTracking } = useTrackingLogger();
 
   return (
     <div className="">
+       <Helmet>
+        <title>Parcel Point | Pendding Deliveries</title>
+      </Helmet>
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center text-[#03373D]">
         Pending Deliveries
       </h2>

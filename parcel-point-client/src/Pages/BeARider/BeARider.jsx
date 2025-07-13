@@ -4,6 +4,7 @@ import riderImg from "../../assets/agent-pending.png";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
+import { Helmet } from "react-helmet";
 
 const BeARider = () => {
   const {
@@ -111,6 +112,9 @@ const BeARider = () => {
 
   return (
     <section className="py-16 px-4 md:px-16 my-10 rounded-3xl shadow-md bg-white">
+      <Helmet>
+        <title>Parcel Point | Be a Rider</title>
+      </Helmet>
       <div className="text-center md:text-left mb-10 mx-auto">
         <h2 className="text-3xl font-bold text-[#03373D]">Be a Rider</h2>
         <p className="mt-2 text-gray-600 max-w-xl mx-auto md:mx-0">

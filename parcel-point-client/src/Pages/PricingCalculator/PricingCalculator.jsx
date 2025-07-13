@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import warehouseData from "../../assets/warehouses.json";
 import Swal from "sweetalert2";
+import { Helmet } from "react-helmet";
 
 const PricingCalculator = () => {
   const [parcelType, setParcelType] = useState("");
@@ -160,6 +161,9 @@ const PricingCalculator = () => {
 
   return (
     <section className="w-[95vw] mx-auto p-4 md:p-8">
+      <Helmet>
+        <title>Parcel Point | Calculator</title>
+      </Helmet>
       <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
         Pricing Calculator
       </h1>

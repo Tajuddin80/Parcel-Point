@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet";
 
 const tabs = [
   { label: "Story", key: "story" },
@@ -36,6 +37,9 @@ export default function AboutUs() {
 
   return (
     <section data-aos="fade-left" className=" px-4 py-12 mx-auto">
+      <Helmet>
+        <title>Parcel Point | About</title>
+      </Helmet>
       <h2 className="text-3xl md:text-4xl font-bold text-[#03373D] mb-2">
         About Us
       </h2>

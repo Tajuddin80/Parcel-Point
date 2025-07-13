@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { Helmet } from "react-helmet";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -120,6 +121,9 @@ const UpdateProfile = () => {
 
   return (
     <section className="flex justify-center items-center min-h-[90vh] bg-base-100 px-4 py-10">
+       <Helmet>
+        <title>Parcel Point | Update Profile</title>
+      </Helmet>
       <motion.div
         className="relative w-full max-w-4xl bg-white rounded-3xl shadow-xl border border-base-300 p-10 space-y-10"
         initial="hidden"

@@ -18,6 +18,7 @@ import {
 import Navbar from "../../Pages/shared/Navbar/Navbar";
 import Footer from "../../Pages/shared/Footer/Footer";
 import useUserRole from "../../hooks/useUserRole";
+import { Helmet } from "react-helmet";
 
 const navLinkClass = ({ isActive }) =>
   `flex items-center gap-2 px-3 py-2 rounded ${
@@ -33,6 +34,9 @@ const DashboardLayout = () => {
     <>
       {/* <Navbar></Navbar> */}
       <div className="drawer lg:drawer-open">
+        <Helmet>
+        <title>Parcel Point | Dashboard</title>
+      </Helmet>
         <input
           id="dashboard-drawer"
           type="checkbox"

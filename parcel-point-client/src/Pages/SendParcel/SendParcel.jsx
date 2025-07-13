@@ -17,6 +17,7 @@ import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import { useNavigate } from "react-router";
 import useTrackingLogger from "../../hooks/useTrackingLogger";
+import { Helmet } from "react-helmet";
 
 const MySwal = withReactContent(Swal);
 
@@ -295,6 +296,9 @@ const SendParcel = () => {
             MySwal.fire({
               html: (
                 <div className="text-left text-sm md:text-base">
+                  <Helmet>
+                    <title>Parcel Point | Send Parcel</title>
+                  </Helmet>
                   <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
                     Your tracking ID:
                     <span className="text-lime-600">{trackingId}</span>
@@ -342,8 +346,7 @@ const SendParcel = () => {
                   "bg-lime-400 hover:bg-lime-500 text-[#03373D] font-semibold rounded px-4 py-2",
               },
             }).then(async () => {
-
-                  // parcel tracking update
+              // parcel tracking update
               await logTracking({
                 tracking_id: orderData.trackingId,
                 status: "parcel is created",

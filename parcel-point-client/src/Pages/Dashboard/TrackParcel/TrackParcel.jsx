@@ -4,6 +4,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
 import { FaSearch, FaMapMarkerAlt, FaClock, FaUser } from "react-icons/fa";
 import { useLocation } from "react-router";
+import { Helmet } from "react-helmet";
 
 const TrackParcel = () => {
   const axiosSecure = useAxiosSecure();
@@ -48,6 +49,9 @@ const TrackParcel = () => {
 
   return (
     <div className="min-h-screen mx-auto px-4 py-10 bg-gray-100 rounded-xl shadow-md">
+      <Helmet>
+        <title>Parcel Point | Track Parcel</title>
+      </Helmet>
       <h2 className="text-5xl font-bold mb-6 text-center text-primary"> Track Your Parcel</h2>
 
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 justify-center mb-10 px-2">
