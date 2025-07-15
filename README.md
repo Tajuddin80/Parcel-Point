@@ -104,7 +104,6 @@ JWT (Backend)
 Firebase Admin SDK (Token validation)
 
 📈 Future Improvements
-Real-time status updates with Socket.IO
 Google Maps integration for delivery route tracking
 Push notifications for delivery updates
 Rider location tracking
