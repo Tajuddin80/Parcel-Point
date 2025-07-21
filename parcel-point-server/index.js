@@ -6,6 +6,7 @@ const port = process.env.PORT || 3000;
 const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 const admin = require("firebase-admin");
+const nodemailer = require("nodemailer");
 
 const client = new MongoClient(process.env.MONGODB_URI, {
   serverApi: {
@@ -25,6 +26,14 @@ const decodedKey = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
   "utf8"
 );
 const serviceAccount = JSON.parse(decodedKey);
+
+const emailTransporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.PARCEL_POINT_EMAIL,
+    pass: process.env.PARCEL_POINT_EMAIL_PASS,
+  },
+});
 
 async function run() {
   try {
@@ -96,6 +105,39 @@ async function run() {
       }
       next();
     };
+
+    app.post("/send-payment-email", async (req, res) => {
+      try {
+        const { transactionId, parcelName, amount, email, userName } = req.body;
+
+        const mailOptions = {
+          from: process.env.PARCEL_POINT_EMAIL,
+          to: email, // send to user
+          subject: ` Payment Successful for ${parcelName}`,
+          html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border-radius: 8px; background: #f7f7f7;">
+          <h2 style="color:#4CAF50;">Thank you for your payment, ${userName}!</h2>
+          <p>Your payment has been successfully processed.</p>
+          <ul>
+            <li><strong>Parcel:</strong> ${parcelName}</li>
+            <li><strong>Amount Paid:</strong> ৳${amount}</li>
+            <li><strong>Transaction ID:</strong> ${transactionId}</li>
+          </ul>
+          <p style="margin-top:20px;">We appreciate your trust in Parcel Point. Track your parcel in your dashboard anytime!</p>
+          <p style="color:gray;font-size:14px;margin-top:30px;">&copy; ${new Date().getFullYear()} Parcel Point</p>
+        </div>
+      `,
+        };
+
+        await emailTransporter.sendMail(mailOptions);
+        res.json({ success: true, message: "Email sent successfully!" });
+      } catch (error) {
+        console.error("Error sending email:", error);
+        res
+          .status(500)
+          .json({ success: false, message: "Failed to send email" });
+      }
+    });
 
     // -----------------------------------all parcel related api's here------------------------------------------
     // add parcels to the db
