@@ -296,9 +296,6 @@ const SendParcel = () => {
             MySwal.fire({
               html: (
                 <div className="text-left text-sm md:text-base">
-                  <Helmet>
-                    <title>Parcel Point | Send Parcel</title>
-                  </Helmet>
                   <div className="font-bold text-gray-700 mb-2 flex items-center gap-2">
                     Your tracking ID:
                     <span className="text-lime-600">{trackingId}</span>
@@ -364,6 +361,9 @@ const SendParcel = () => {
 
   return (
     <section className="w-full lg:w-[80vw] mx-auto p-4 md:p-8">
+      <Helmet>
+        <title>Parcel Point | Send Parcel</title>
+      </Helmet>
       <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
         Add Parcel
       </h1>

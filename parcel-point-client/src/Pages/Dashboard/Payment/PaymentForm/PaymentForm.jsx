@@ -115,6 +115,13 @@ const PaymentForm = () => {
 
         const paymentRes = await axiosSecure.post("/payments", paymentDoc);
         if (paymentRes.data.insertedId) {
+          await axiosSecure.post("/send-payment-email", {
+            transactionId,
+            parcelName: parcelInfo?.parcelName,
+            amount,
+            email: user?.email,
+            userName: user?.displayName,
+          });
           await Swal.fire({
             title: "Payment Successful!",
             html: `Transaction ID: <strong>${transactionId}</strong>`,
@@ -149,7 +156,7 @@ const PaymentForm = () => {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="max-w-md mx-auto mt-10 p-6 bg-white shadow-2xl rounded-2xl"
     >
-       <Helmet>
+      <Helmet>
         <title>Parcel Point | Payment</title>
       </Helmet>
       <h2 className="text-2xl font-bold mb-4 text-center text-brand">
