@@ -5,6 +5,7 @@ import { FaArrowLeft, FaCopy, FaUserAlt, FaTruck } from "react-icons/fa";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import Loader from "../../shared/Loader/Loader";
 import Swal from "sweetalert2";
+import { Helmet } from "react-helmet";
 
 const ParcelDetails = () => {
   const { id } = useParams();

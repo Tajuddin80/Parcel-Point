@@ -38,7 +38,8 @@ const UserDashboard = () => {
       </h1>
 
       <p className="mb-10 text-lg max-w-xl">
-        Use the sidebar to navigate your dashboard. Stay updated, manage your tasks, and take control.
+        Use the sidebar to navigate your dashboard. Stay updated, manage your
+        tasks, and take control.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full ">
@@ -46,7 +47,7 @@ const UserDashboard = () => {
           <div
             key={idx}
             onClick={() => navigate(route)}
-            className="cursor-pointer bg-base-200 p-6 rounded-lg shadow hover:shadow-lg transition"
+            className="cursor-pointer bg-base-200 p-6 rounded-lg shadow hover:shadow-lg transition flex flex-col items-center text-center"
           >
             <Icon className={`text-5xl ${color} mb-4`} />
             <h3 className="text-xl font-semibold mb-2">{title}</h3>

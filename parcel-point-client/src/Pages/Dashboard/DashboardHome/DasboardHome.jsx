@@ -18,7 +18,7 @@ const DashboardHome = () => {
     return <AdminDashboard />;
   } else if (role === "rider") {
     return <RiderDashboard />;
-  } else if (role === "usr") {
+  } else if (role === "user") {
     return <UserDashboard />;
   } else {
     return <Forbidden></Forbidden>;
