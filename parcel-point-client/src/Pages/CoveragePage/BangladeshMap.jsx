@@ -33,7 +33,7 @@ const MapFlyTo = ({ lat, lng, zoom = 11 }) => {
 
 // ─── Main map component ────────────────────────────────────────────────────────
 const BangladeshMap = ({ warehouseData, searchFocusDistrict }) => (
-  <div className="w-full h-[70vh] rounded-xl overflow-hidden shadow-lg">
+  <div className="w-full h-[70vh] rounded-xl overflow-hidden shadow-lg relative z-10">
     <MapContainer
       center={[23.685, 90.3563]} // Bangladesh centroid
       zoom={10}
