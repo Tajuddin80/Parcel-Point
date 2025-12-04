@@ -1,117 +1,53 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const app = express();
-const port = process.env.PORT || 3000;
-const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
-const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
-const admin = require("firebase-admin");
-const nodemailer = require("nodemailer");
+import { Request, Response } from "express";
+import { verifyFireBaseToken } from "./middleware/verifyFirebaseToken";
+import config from "./config";
+import express from "express";
+import { verifyAdmin } from "./middleware/verifyAdmin";
+import { verifyRider } from "./middleware/verifyRider";
+import { FindOptions, ObjectId } from "mongodb";
+import {
+  parcelsCollection,
+  paymentsCollection,
+  ridersCollection,
+  roleRequestsCollection,
+  trackingsCollection,
+  usersCollection,
+} from "./config/db";
+import { emailTransporter } from "./utils/mailer";
+import { parcelRoutes } from "./parcel/parcel.routes";
+import { userRoutes } from "./user/user.routes";
 
-const client = new MongoClient(process.env.MONGODB_URI, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-  // tls: true,
-  // serverSelectionTimeoutMS: 3000,
-  // autoSelectFamily: false,
-});
+const cors = require("cors");
+const stripe = require("stripe")(config.payment_gateway_key);
+const admin = require("firebase-admin");
+
+export const app = express();
+
 app.use(cors());
 app.use(express.json());
 
 // const serviceAccount = require("./firebase-admin-key.json");
-const decodedKey = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
-  "utf8"
-);
+const decodedKey = Buffer.from(
+  config.fb_service_key as string,
+  "base64"
+).toString("utf8");
 const serviceAccount = JSON.parse(decodedKey);
 
-const emailTransporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.PARCEL_POINT_EMAIL,
-    pass: process.env.PARCEL_POINT_EMAIL_PASS,
-  },
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
 });
+
+app.use("/parcels", parcelRoutes);
+app.use("/users", userRoutes);
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-
-    const db = client.db("parcelPoint");
-
-    // all collections
-    const parcelsCollection = db.collection("allParcels");
-    const usersCollection = db.collection("allUsers");
-    const paymentsCollection = db.collection("allPayments");
-    const ridersCollection = db.collection("allRiders");
-    const trackingsCollection = db.collection("allTrackings");
-    const roleRequestsCollection = db.collection("allRoleRequests");
-
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-
-    // custom middlewares here
-    const verifyFireBaseToken = async (req, res, next) => {
-      // console.log('header in iddleware', req.headers);
-      const authHeader = req.headers.authorization;
-      if (!authHeader) {
-        return res.status(401).send({ message: "unauthorized access" });
-      }
-      const token = authHeader.split(" ")[1];
-
-      if (!token) {
-        return res.status(401).send({ message: "unauthorized access" });
-      }
-
-      //  verify the token here
-      try {
-        const decoded = await admin.auth().verifyIdToken(token);
-        req.decoded = decoded;
-        next();
-      } catch (error) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-    };
-
-    // verify admin role
-    const verifyAdmin = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email };
-      const user = await usersCollection.findOne(query);
-
-      // used just for checking
-      // if (!user || user.role === "admin") {
-
-      if (!user || user.role !== "admin") {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      next();
-    };
-    // verify rider role
-    const verifyRider = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email };
-      const user = await usersCollection.findOne(query);
-
-      // used just for checking
-      // if (!user || user.role === "admin") {
-
-      if (!user || user.role !== "rider") {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      next();
-    };
-
-    app.post("/send-payment-email", async (req, res) => {
+    app.post("/send-payment-email", async (req: Request, res: Response) => {
       try {
         const { transactionId, parcelName, amount, email, userName } = req.body;
 
         const mailOptions = {
-          from: process.env.PARCEL_POINT_EMAIL,
+          from: config.parcel_point_email,
           to: email, // send to user
           subject: ` Payment Successful for ${parcelName}`,
           html: `
@@ -139,380 +75,77 @@ async function run() {
       }
     });
 
-    // -----------------------------------all parcel related api's here------------------------------------------
-    // add parcels to the db
-    app.post("/parcels", verifyFireBaseToken, async (req, res) => {
-      try {
-        const newOrder = req.body;
-        const result = await parcelsCollection.insertOne(newOrder);
-        res.status(200).send(result);
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({ message: "error happend" });
-      }
-    });
-
-    // get parcels from db
-    app.get("/parcels", verifyFireBaseToken, async (req, res) => {
-      try {
-        const userEmail = req.query.email;
-        const query = userEmail ? { created_by: userEmail } : {};
-        const options = {
-          sort: { createdAt: -1 },
-        };
-        const parcels = await parcelsCollection.find(query, options).toArray();
-        res.send(parcels);
-      } catch (error) {
-        console.error("error fetching parceels: ", error);
-        res.status(500).send({ message: "failed to get parcels" });
-      }
-    });
-
-    // delete parcel
-    app.delete("/parcels/:id", verifyFireBaseToken, async (req, res) => {
-      const parcelId = req.params.id;
-
-      try {
-        const result = await parcelsCollection.deleteOne({
-          _id: new ObjectId(parcelId),
-        });
-        if (result.deletedCount > 0) {
-          res.send(result);
-        } else {
-          res.status(404).send({ message: "failed to delete parcel" });
-        }
-      } catch (error) {
-        console.error("Error deleting parcel:", error);
-        res.status(500).send({ message: "failed to delete parcel" });
-      }
-    });
-
-    // Get single parcel by id
-    app.get("/parcelData/:id", verifyFireBaseToken, async (req, res) => {
-      const parcelId = req.params.id;
-
-      try {
-        const result = await parcelsCollection.findOne({
-          _id: new ObjectId(parcelId),
-        });
-
-        if (result) {
-          res.send(result);
-        } else {
-          res.status(404).send({ message: "Parcel not found" });
-        }
-      } catch (error) {
-        console.error("Error fetching parcel:", error);
-        res.status(500).send({ message: "Failed to fetch parcel" });
-      }
-    });
-
-    // PATCH: Assign a rider to a parcel
-    app.patch("/assign", verifyFireBaseToken, verifyAdmin, async (req, res) => {
-      const {
-        parcelId,
-        assignedRiderId,
-        assignedRiderEmail,
-        assignedRiderContact,
-        assignedRiderNid,
-      } = req.body;
-
-      if (
-        !parcelId ||
-        !assignedRiderId ||
-        !assignedRiderEmail ||
-        !assignedRiderContact ||
-        !assignedRiderNid
-      ) {
-        return res.status(400).send({ message: "Missing assignment details" });
-      }
-
-      try {
-        // 1. Update parcel: deliveryStatus + rider info
-        const parcelUpdate = await parcelsCollection.updateOne(
-          { _id: new ObjectId(parcelId) },
-          {
-            $set: {
-              deliveryStatus: "rider_assigned",
-              assignedRiderId,
-              assignedRiderEmail,
-              assignedRiderContact,
-              assignedRiderNid,
-            },
-          }
-        );
-
-        // 2. Update rider status
-        const riderUpdate = await ridersCollection.updateOne(
-          { _id: new ObjectId(assignedRiderId) },
-          { $set: { status: "in-delivery" } }
-        );
-
-        if (
-          parcelUpdate.modifiedCount === 0 ||
-          riderUpdate.modifiedCount === 0
-        ) {
-          return res
-            .status(404)
-            .send({ message: "Failed to assign rider or update status" });
-        }
-
-        res.send({ message: "Rider assigned to parcel successfully" });
-      } catch (err) {
-        console.error("Assignment failed:", err);
-        res.status(500).send({ message: "Assignment failed" });
-      }
-    });
-
-    // GET /parcels?status=assignable paid but not collected
-    app.get(
-      "/parcels/assignable",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req, res) => {
-        try {
-          console.log("Received request for assignable parcels");
-
-          // Log database connection and collection info
-          // console.log("parcelCollection:", parcelsCollection ? "OK" : "NOT OK");
-
-          const parcels = await parcelsCollection
-            .find({
-              deliveryStatus: "not_collected",
-              paymentStatus: "paid",
-            })
-            .toArray();
-
-          // console.log("Found parcels:", parcels.length);
-
-          res.send(parcels);
-        } catch (error) {
-          console.error("Error fetching assignable parcels:", error);
-          res.status(500).send({ message: "Internal server error" });
-        }
-      }
-    );
-
-    // ---------------------------------------------all user relateed api's here---------------------------------------------------------------
-    // post an user to db
-    app.post("/users", async (req, res) => {
-      const { email, role, last_log_in, created_at } = req.body;
-
-      if (!email) {
-        return res.status(400).send({ message: "Email is required" });
-      }
-
-      const userExists = await usersCollection.findOne({ email });
-
-      if (userExists) {
-        // User already exists — update last_log_in only
-        const updateResult = await usersCollection.updateOne(
-          { email },
-          { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
-        );
-
-        return res.status(200).send({
-          message: "User already exists, last_log_in updated",
-          inserted: false,
-          updated: updateResult.modifiedCount > 0,
-        });
-      }
-
-      // New user — insert all data
-      const user = {
-        email,
-        role: role || "user",
-        last_log_in,
-        created_at,
-      };
-
-      const insertResult = await usersCollection.insertOne(user);
-
-      return res.status(201).send({
-        message: "New user created",
-        inserted: true,
-        result: insertResult,
-      });
-    });
-
-    // Get user by email search
-    // Get users by email and/or role
-    app.get("/users/search", verifyFireBaseToken, async (req, res) => {
-      const { email = "", role = "" } = req.query;
-
-      // If neither email nor role is provided
-      if (!email && !role) {
-        return res.status(400).send({ message: "Missing email or role query" });
-      }
-
-      const query = {};
-
-      if (email) {
-        const regex = new RegExp(email, "i"); // case-insensitive partial match
-        query.email = { $regex: regex };
-      }
-
-      if (role) {
-        query.role = role;
-      }
-
-      try {
-        const users = await usersCollection
-          .find(query)
-          .project({ email: 1, created_at: 1, role: 1 })
-          .limit(10)
-          .toArray();
-
-        res.send(users);
-      } catch (err) {
-        console.error("Error searching users", err);
-        res.status(500).send({ message: "Error searching users" });
-      }
-    });
-
-    // Get role by email
-    app.get("/users/:email/role", async (req, res) => {
-      try {
-        const email = req.params.email;
-        if (!email) {
-          return res.status(400).send({ message: "Email is required" });
-        }
-        const user = await usersCollection.findOne({ email });
-        if (!user) {
-          return res.status(400).send({ message: "user not found" });
-        }
-        res.send({ role: user.role || "user" });
-      } catch (error) {
-        console.error("Error getting the role: ", error);
-        res.status(500).send({ message: "Failed to get role" });
-      }
-    });
-
-    app.post("/users", async (req, res) => {
-      const { email, role, last_log_in, created_at } = req.body;
-
-      if (!email) {
-        return res.status(400).send({ message: "Email is required" });
-      }
-
-      const userExists = await usersCollection.findOne({ email });
-
-      if (userExists) {
-        // User already exists — update last_log_in only
-        const updateResult = await usersCollection.updateOne(
-          { email },
-          { $set: { last_log_in } } // or use `new Date()` for server-side timestamp
-        );
-        return res.status(200).send({
-          message: "User already exists, last_log_in updated",
-          inserted: false,
-          updated: updateResult.modifiedCount > 0,
-        });
-      }
-
-      // New user — insert all data
-      const user = {
-        email,
-        role: role || "user",
-        last_log_in,
-        created_at,
-      };
-
-      const insertResult = await usersCollection.insertOne(user);
-
-      return res.status(201).send({
-        message: "New user created",
-        inserted: true,
-        result: insertResult,
-      });
-    });
-
-    app.patch(
-      "/users/:id/role",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req, res) => {
-        const { id } = req.params;
-        const { role } = req.body;
-
-        if (!["admin", "user"].includes(role)) {
-          return res.status(400).send({ message: "invalid role" });
-        }
-
-        try {
-          const result = await usersCollection.updateOne(
-            {
-              _id: new ObjectId(id),
-            },
-            {
-              $set: { role },
-            }
-          );
-          res.send({ message: `User role updated to ${role}`, result });
-        } catch (error) {
-          console.error(error);
-
-          res.status(500).send({ message: "Failed to update user role" });
-        }
-      }
-    );
-
+   
     // ----------------------------------------------Rider related api's-------------------------------------
 
-    app.post("/riders", verifyFireBaseToken, async (req, res) => {
-      const riderEmail = req.body.email;
-      const newRider = req.body;
+    app.post(
+      "/riders",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        const riderEmail = req.body.email;
+        const newRider = req.body;
 
-      try {
-        const existingRider = await ridersCollection.findOne({
-          email: riderEmail,
-        });
+        try {
+          type RiderStatus = "pending" | "active" | "rejected";
+          const existingRider = await ridersCollection.findOne({
+            email: riderEmail,
+          });
 
-        if (existingRider) {
-          const status = existingRider.status;
+          if (existingRider) {
+            const status = existingRider.status as RiderStatus;
 
-          const messages = {
-            pending: "Your application is already under review. Please wait.",
-            active: "You are already an approved rider.",
-            rejected:
-              "Your previous application was rejected. Please contact support or wait before reapplying.",
-          };
+            const messages: {
+              pending: string;
+              active: string;
+              rejected: string;
+            } = {
+              pending: "Your application is already under review. Please wait.",
+              active: "You are already an approved rider.",
+              rejected:
+                "Your previous application was rejected. Please contact support or wait before reapplying.",
+            };
 
-          const message = messages[status] || "You have already applied.";
+            const message = messages[status] || "You have already applied.";
 
-          return res.status(400).send({ message, status });
+            return res.status(400).send({ message, status });
+          }
+
+          const result = await ridersCollection.insertOne(newRider);
+          res.send(result);
+        } catch (error) {
+          console.error("Error inserting rider:", error);
+          res
+            .status(500)
+            .send({ message: "Server error while submitting application." });
         }
-
-        const result = await ridersCollection.insertOne(newRider);
-        res.send(result);
-      } catch (error) {
-        console.error("Error inserting rider:", error);
-        res
-          .status(500)
-          .send({ message: "Server error while submitting application." });
       }
-    });
+    );
 
     // GET all pending riders
-    app.get("/pending", verifyFireBaseToken, verifyAdmin, async (req, res) => {
-      try {
-        const pendingRiders = await ridersCollection
-          .find({
-            status: "pending",
-          })
-          .toArray();
-        res.send(pendingRiders);
-      } catch (error) {
-        console.error("Error fetching pending riders:", error);
-        res.status(500).send({ message: "Failed to load pending riders" });
+    app.get(
+      "/pending",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req: Request, res: Response) => {
+        try {
+          const pendingRiders = await ridersCollection
+            .find({
+              status: "pending",
+            })
+            .toArray();
+          res.send(pendingRiders);
+        } catch (error: any) {
+          console.error("Error fetching pending riders:", error);
+          res.status(500).send({ message: "Failed to load pending riders" });
+        }
       }
-    });
+    );
 
     app.delete(
       "/riders/:id",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         const { id } = req.params;
         try {
           const result = await ridersCollection.deleteOne({
@@ -529,7 +162,7 @@ async function run() {
       "/riders/:id",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         const { id } = req.params;
         const { status, email } = req.body;
 
@@ -587,22 +220,26 @@ async function run() {
     );
 
     // Cleaner and secure since verifyAdmin is already checking the role
-    app.get("/riders", verifyFireBaseToken, verifyAdmin, async (req, res) => {
-      const { status } = req.query;
-      const query = {};
+    app.get(
+      "/riders",
+      verifyFireBaseToken,
+      verifyAdmin,
+      async (req: Request, res: Response) => {
+        const { status } = req.query as { status?: string };
+        const query: Record<string, any> = {};
+        if (status) {
+          query.status = status;
+        }
 
-      if (status) {
-        query.status = status;
+        try {
+          const riders = await ridersCollection.find(query).toArray();
+          res.send(riders);
+        } catch (err) {
+          console.error("Error fetching riders", err);
+          res.status(500).send({ message: "Failed to load riders" });
+        }
       }
-
-      try {
-        const riders = await ridersCollection.find(query).toArray();
-        res.send(riders);
-      } catch (err) {
-        console.error("Error fetching riders", err);
-        res.status(500).send({ message: "Failed to load riders" });
-      }
-    });
+    );
 
     // get pending delivery task for rider
 
@@ -610,7 +247,7 @@ async function run() {
       "/rider-parcels",
       verifyFireBaseToken,
       verifyRider,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const { email } = req.query;
 
@@ -644,7 +281,7 @@ async function run() {
       "/rider-completed-parcels",
       verifyFireBaseToken,
       verifyRider,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const { email } = req.query;
           if (!email) {
@@ -654,7 +291,7 @@ async function run() {
             assignedRiderEmail: email,
             deliveryStatus: { $in: ["delivered", "service_center_delivered"] },
           };
-          const options = {
+          const options: FindOptions = {
             sort: { createdAt: -1 },
           };
 
@@ -676,12 +313,12 @@ async function run() {
       "/rider-parcels/:id/status",
       verifyFireBaseToken,
       verifyRider,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         const { id } = req.params;
         const { deliveryStatus } = req.body;
 
         try {
-          const updateFields = { deliveryStatus };
+          const updateFields: Record<string, any> = { deliveryStatus };
 
           const parcel = await parcelsCollection.findOne({
             _id: new ObjectId(id),
@@ -733,7 +370,7 @@ async function run() {
       "/rider/wallet",
       verifyFireBaseToken,
       verifyRider,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         const { email } = req.query;
         if (!email) {
           return res.status(400).send({ message: "Email is required" });
@@ -761,7 +398,7 @@ async function run() {
       "/rider/cashout",
       verifyFireBaseToken,
       verifyRider,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         const { email, amount } = req.body;
 
         if (!email || typeof amount !== "number" || amount <= 0) {
@@ -817,7 +454,7 @@ async function run() {
       "/rider/dashboard",
       verifyFireBaseToken,
       verifyRider,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const riderEmail = req.query.email;
           if (!riderEmail) {
@@ -867,7 +504,7 @@ async function run() {
       "/admin/analytics",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const now = new Date();
 
@@ -882,7 +519,7 @@ async function run() {
           const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
 
           // Helper function to create match stage with $toDate conversion for deliveredAt
-          const timeMatchStages = (start) => ({
+          const timeMatchStages = (start: Date): Record<string, any> => ({
             $match: {
               deliveryStatus: "delivered",
               $expr: { $gte: [{ $toDate: "$deliveredAt" }, start] },
@@ -984,7 +621,7 @@ async function run() {
       "/dashboard/delivery-stats",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const now = new Date();
 
@@ -1024,7 +661,7 @@ async function run() {
             month,
             year,
           });
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error in delivery stats:", err);
           res.status(500).send({ message: "Failed to fetch delivery stats" });
         }
@@ -1035,7 +672,7 @@ async function run() {
       "/dashboard/parcel-summary",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const result = await parcelsCollection
             .aggregate([
@@ -1060,7 +697,7 @@ async function run() {
       "/dashboard/revenue-summary",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const deliveredParcels = await parcelsCollection
             .find({
@@ -1103,7 +740,7 @@ async function run() {
       "/dashboard/role-requests",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const result = await roleRequestsCollection
             .aggregate([
@@ -1128,7 +765,7 @@ async function run() {
       "/dashboard/rider-activity",
       verifyFireBaseToken,
       verifyAdmin,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         try {
           const active = await ridersCollection.countDocuments({
             status: "active",
@@ -1147,124 +784,144 @@ async function run() {
 
     //  -------------------------------------------role request related apis-----------------------------------------------
     // POST: /roleRequests
-    app.post("/roleRequests", verifyFireBaseToken, async (req, res) => {
-      const request = req.body;
-      try {
-        const result = await roleRequestsCollection.insertOne(request);
-        res.send({ success: true, insertedId: result.insertedId });
-      } catch (error) {
-        console.error("Error saving role request:", error);
-        res.status(500).send({ message: "Failed to submit role request" });
+    app.post(
+      "/roleRequests",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        const request = req.body;
+        try {
+          const result = await roleRequestsCollection.insertOne(request);
+          res.send({ success: true, insertedId: result.insertedId });
+        } catch (error) {
+          console.error("Error saving role request:", error);
+          res.status(500).send({ message: "Failed to submit role request" });
+        }
       }
-    });
+    );
 
     // --------------------------------------Tracking related api's -------------------------------------
 
     // get updats by tracking id
-    app.get("/trackings/:trackingId", verifyFireBaseToken, async (req, res) => {
-      const trackingId = req.params.trackingId;
+    app.get(
+      "/trackings/:trackingId",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        const trackingId = req.params.trackingId;
 
-      const updates = await trackingsCollection
-        .find({
-          tracking_id: trackingId,
-        })
-        .sort({ timestamp: 1 })
-        .toArray();
-
-      res.send(updates);
-    });
-
-    // GET /trackings?tracking_id=TRK-XYZ123
-    app.get("/trackings", verifyFireBaseToken, async (req, res) => {
-      try {
-        const tracking_id = req.query.tracking_id;
-        if (!tracking_id) {
-          return res.status(400).json({ message: "Tracking ID is required" });
-        }
-
-        const logs = await trackingsCollection
-          .find({ tracking_id })
-          .sort({ timestamp: 1 }) // ascending order
+        const updates = await trackingsCollection
+          .find({
+            tracking_id: trackingId,
+          })
+          .sort({ timestamp: 1 })
           .toArray();
 
-        res.send(logs);
-      } catch (error) {
-        console.error("Failed to fetch tracking logs:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.send(updates);
       }
-    });
+    );
+
+    // GET /trackings?tracking_id=TRK-XYZ123
+    app.get(
+      "/trackings",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        try {
+          const tracking_id = req.query.tracking_id;
+          if (!tracking_id) {
+            return res.status(400).json({ message: "Tracking ID is required" });
+          }
+
+          const logs = await trackingsCollection
+            .find({ tracking_id })
+            .sort({ timestamp: 1 }) // ascending order
+            .toArray();
+
+          res.send(logs);
+        } catch (error) {
+          console.error("Failed to fetch tracking logs:", error);
+          res.status(500).json({ message: "Internal server error" });
+        }
+      }
+    );
 
     // post tracking updats
-    app.post("/trackings", verifyFireBaseToken, async (req, res) => {
-      const update = req.body;
+    app.post(
+      "/trackings",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        const update = req.body;
 
-      update.timestamp = new Date();
+        update.timestamp = new Date();
 
-      if (!update.tracking_id || !update.status) {
-        return res
-          .status(400)
-          .send({ message: "tracking id and status are required" });
+        if (!update.tracking_id || !update.status) {
+          return res
+            .status(400)
+            .send({ message: "tracking id and status are required" });
+        }
+
+        const result = await trackingsCollection.insertOne(update);
+        res.status(201).send(result);
       }
-
-      const result = await trackingsCollection.insertOne(update);
-      res.status(201).send(result);
-    });
+    );
 
     // --------------------------------------payent related apis here----------------------------------------------------
     // save payment in db
-    app.post("/payments", verifyFireBaseToken, async (req, res) => {
-      const payment = req.body;
-      const {
-        parcelName,
-        parcelId,
-        transactionId,
-        paymentMethod,
-        email,
-        userName,
-        amount,
-        cardType,
-      } = payment;
-
-      try {
-        // 1. Insert into payments collection
-        const paymentDoc = {
+    app.post(
+      "/payments",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        const payment = req.body;
+        const {
           parcelName,
-          parcelId: new ObjectId(parcelId),
-          userName,
-          email,
-          amount,
-          paymentMethod,
-          cardType,
+          parcelId,
           transactionId,
-          paid_at_string: new Date().toISOString(),
-          paid_at: new Date(),
-        };
+          paymentMethod,
+          email,
+          userName,
+          amount,
+          cardType,
+        } = payment;
 
-        const paymentResult = await paymentsCollection.insertOne(paymentDoc);
+        try {
+          // 1. Insert into payments collection
+          const paymentDoc = {
+            parcelName,
+            parcelId: new ObjectId(parcelId),
+            userName,
+            email,
+            amount,
+            paymentMethod,
+            cardType,
+            transactionId,
+            paid_at_string: new Date().toISOString(),
+            paid_at: new Date(),
+          };
 
-        // 2. Update the parcel's paymentStatus to 'paid'
-        const parcelUpdateResult = await parcelsCollection.updateOne(
-          { _id: new ObjectId(parcelId) },
-          { $set: { paymentStatus: "paid" } }
-        );
+          const paymentResult = await paymentsCollection.insertOne(paymentDoc);
 
-        res.send({
-          success: true,
-          insertedId: paymentResult.insertedId,
-          modifiedParcel: parcelUpdateResult.modifiedCount,
-        });
-      } catch (error) {
-        console.error("Error processing payment:", error);
-        res.status(500).send({ message: "Payment processing failed" });
+          // 2. Update the parcel's paymentStatus to 'paid'
+          const parcelUpdateResult = await parcelsCollection.updateOne(
+            { _id: new ObjectId(parcelId) },
+            { $set: { paymentStatus: "paid" } }
+          );
+
+          res.send({
+            success: true,
+            insertedId: paymentResult.insertedId,
+            modifiedParcel: parcelUpdateResult.modifiedCount,
+          });
+        } catch (error) {
+          console.error("Error processing payment:", error);
+          res.status(500).send({ message: "Payment processing failed" });
+        }
       }
-    });
+    );
 
     // VVI:   write prompt in stripe.js AI : i want to create custom card payment system using react and node on the server
     // card payment intent related
     app.post(
       "/create-payment-intent",
       verifyFireBaseToken,
-      async (req, res) => {
+      async (req: Request, res: Response) => {
         const amountInCents = req.body.amountInCents;
         try {
           const paymentIntent = await stripe.paymentIntents.create({
@@ -1273,28 +930,32 @@ async function run() {
             payment_method_types: ["card"],
           });
           res.json({ clientSecret: paymentIntent.client_secret });
-        } catch (error) {
+        } catch (error: any) {
           res.status(500).json({ error: error.message });
         }
       }
     );
 
-    app.get("/payments", verifyFireBaseToken, async (req, res) => {
-      const userEmail = req.query.email;
+    app.get(
+      "/payments",
+      verifyFireBaseToken,
+      async (req: Request, res: Response) => {
+        const userEmail = req.query.email;
 
-      try {
-        const query = userEmail ? { email: userEmail } : {};
-        const history = await paymentsCollection
-          .find(query)
-          .sort({ paid_at: -1 }) // Latest first
-          .toArray();
+        try {
+          const query = userEmail ? { email: userEmail } : {};
+          const history = await paymentsCollection
+            .find(query)
+            .sort({ paid_at: -1 }) // Latest first
+            .toArray();
 
-        res.send(history);
-      } catch (error) {
-        console.error("Error fetching payment history:", error);
-        res.status(500).send({ message: "Failed to load payment history" });
+          res.send(history);
+        } catch (error) {
+          console.error("Error fetching payment history:", error);
+          res.status(500).send({ message: "Failed to load payment history" });
+        }
       }
-    });
+    );
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
@@ -1307,10 +968,6 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
 });

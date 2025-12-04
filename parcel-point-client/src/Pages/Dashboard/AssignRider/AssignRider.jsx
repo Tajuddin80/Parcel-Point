@@ -175,7 +175,7 @@ const AssignRider = () => {
 
                         if (confirm.isConfirmed) {
                           try {
-                            await axiosSecure.patch("/assign", {
+                            await axiosSecure.patch("/parcels/assign", {
                               parcelId: selectedParcel._id,
                               assignedRiderId: rider._id,
                               assignedRiderEmail: rider.email,

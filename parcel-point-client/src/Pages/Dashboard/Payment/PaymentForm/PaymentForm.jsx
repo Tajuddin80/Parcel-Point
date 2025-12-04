@@ -27,7 +27,7 @@ const PaymentForm = () => {
     queryKey: ["parcels", parcelId],
     enabled: !!user?.email,
     queryFn: async () => {
-      const res = await axiosSecure.get(`/parcelData/${parcelId}`);
+      const res = await axiosSecure.get(`/parcels/parcelData/${parcelId}`);
       return res.data;
     },
   });

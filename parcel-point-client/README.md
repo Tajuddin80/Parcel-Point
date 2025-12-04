@@ -65,7 +65,7 @@ npm install
 src/
   components/       # Reusable UI components
   pages/            # Route pages
-  hooks/            # Custom React hooks (e.g., useAxiosSecure)
+  hooks/            # Custom React hooks (e.g., useaxiosSecure)
   context/          # Context providers (Auth, etc.)
   routes/           # Route definitions
   utils/            # Utility functions

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import GoogleSignButton from "../GoogleSignButton/GoogleSignButton";
 import useAuth from "../../../hooks/useAuth";

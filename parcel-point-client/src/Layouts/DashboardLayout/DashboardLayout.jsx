@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, NavLink, Outlet } from "react-router";
+import {  NavLink, Outlet } from "react-router";
 import ParcelPointLogo from "../../Pages/shared/ParcelPointLogo/ParcelPointLogo";
 import {
   FaHome,
@@ -15,8 +15,6 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 
-import Navbar from "../../Pages/shared/Navbar/Navbar";
-import Footer from "../../Pages/shared/Footer/Footer";
 import useUserRole from "../../hooks/useUserRole";
 import { Helmet } from "react-helmet";
 

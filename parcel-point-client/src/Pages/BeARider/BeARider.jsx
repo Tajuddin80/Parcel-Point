@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import riderImg from "../../assets/agent-pending.png";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
 import { Helmet } from "react-helmet";
+import {  useNavigate } from "react-router";
 
 const BeARider = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -75,7 +77,9 @@ const BeARider = () => {
           title: "Application Submitted",
           text: "Your application is pending approval.",
           showConfirmButton: false,
-          timer: 2000,
+          timer: 4000,
+        }).then(() => {
+          navigate("/");
         });
       }
     } catch (error) {

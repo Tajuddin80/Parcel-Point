@@ -19,7 +19,7 @@ const ParcelDetails = () => {
   } = useQuery({
     queryKey: ["parcel-details", id],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/parcelData/${id}`);
+      const res = await axiosSecure.get(`/parcels/parcelData/${id}`);
       return res.data;
     },
     enabled: !!id,
