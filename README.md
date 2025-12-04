@@ -1,4 +1,4 @@
-# 📦🚀 Parcel Point – Full Stack (Frontend & Backend)
+# 📦 Parcel Point – Full Stack (Frontend & Backend)
 
 **Parcel Point** is a modern parcel management system with a **React 19** frontend and a **Node.js/Express** backend.  
 It supports **user authentication (Firebase)**, **parcel booking & tracking**, **Stripe payments**, **email notifications**, and **interactive analytics**.

@@ -5,7 +5,7 @@ import Navbar from "../../Pages/shared/Navbar/Navbar";
 const HomeLayout = () => {
   return (
     <div className="flex flex-col min-h-[150vh]">
-      <div>
+      <div className="top-0 sticky z-90">
         <Navbar></Navbar>
       </div>
       <div className="flex-1">
