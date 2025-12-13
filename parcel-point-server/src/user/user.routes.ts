@@ -14,7 +14,4 @@ router.get("/:email/role", verifyFireBaseToken, userController.getRoleByEmail);
 
 router.patch("/:id/role", verifyFireBaseToken, verifyAdmin, userController.updateUserRole);
 
-// router.get("/assignable", verifyFireBaseToken, verifyAdmin);
-// router.delete("/:id", verifyFireBaseToken);
-
 export const userRoutes = router;

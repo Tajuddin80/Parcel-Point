@@ -1,4 +1,4 @@
-import { Collection, ObjectId } from "mongodb";
+import { Collection, Document, Filter, ObjectId, UpdateFilter } from "mongodb";
 import { usersCollection } from "../config/db";
 
 export const userService = {
@@ -49,8 +49,18 @@ const updateUserRole = async (id: string, role: string) => {
   return result;
 };
 
+const updateRoleToRider = async (
+  userQuery: Filter<Document>,
+  userUpdateDoc: Document[] | UpdateFilter<Document>
+) => {
+  const roleResult = await usersCollection.updateOne(userQuery, userUpdateDoc);
+
+  return roleResult;
+};
+
 export const userServices = {
   getUser,
   getRoleByEmail,
   updateUserRole,
+  updateRoleToRider,
 };

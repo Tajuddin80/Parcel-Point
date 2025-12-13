@@ -16,7 +16,7 @@ const CompletedDeliveries = () => {
     queryKey: ["rider-completed-parcels", user?.email],
     enabled: !!user?.email,
     queryFn: async () => {
-      const res = await axiosSecure.get("/rider-completed-parcels", {
+      const res = await axiosSecure.get("/riders/rider-completed-parcels", {
         params: { email: user.email },
       });
       return res.data;
@@ -31,7 +31,7 @@ const CompletedDeliveries = () => {
     queryKey: ["rider-wallet", user?.email],
     enabled: !!user?.email,
     queryFn: async () => {
-      const res = await axiosSecure.get("/rider/wallet", {
+      const res = await axiosSecure.get("/riders/rider/wallet", {
         params: { email: user.email },
       });
       return res.data;
@@ -40,7 +40,7 @@ const CompletedDeliveries = () => {
 
   const { mutate: cashout, isPending: isCashoutProcessing } = useMutation({
     mutationFn: async () => {
-      const res = await axiosSecure.post("/rider/cashout", {
+      const res = await axiosSecure.post("/riders/rider/cashout", {
         email: user.email,
         amount: cashoutAmount,
       });

@@ -18,7 +18,7 @@ const { logTracking } = useTrackingLogger();
   } = useQuery({
     queryKey: ["riderPendingParcels", user?.email],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/rider-parcels?email=${user?.email}`);
+      const res = await axiosSecure.get(`/riders/rider-parcels?email=${user?.email}`);
       return res.data;
     },
     enabled: !!user?.email,
@@ -47,7 +47,7 @@ const { logTracking } = useTrackingLogger();
     if (!confirmResult.isConfirmed) return;
 
     try {
-      const res = await axiosSecure.patch(`/rider-parcels/${parcelId}/status`, {
+      const res = await axiosSecure.patch(`/riders/rider-parcels/${parcelId}/status`, {
         deliveryStatus: nextStatus,
       });
 

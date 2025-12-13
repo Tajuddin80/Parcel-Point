@@ -16,6 +16,7 @@ import {
 import { emailTransporter } from "./utils/mailer";
 import { parcelRoutes } from "./parcel/parcel.routes";
 import { userRoutes } from "./user/user.routes";
+import { riderRoutes } from "./rider/rider.routes";
 
 const cors = require("cors");
 const stripe = require("stripe")(config.payment_gateway_key);
@@ -39,6 +40,7 @@ admin.initializeApp({
 
 app.use("/parcels", parcelRoutes);
 app.use("/users", userRoutes);
+app.use("/riders", riderRoutes);
 
 async function run() {
   try {
@@ -64,7 +66,6 @@ async function run() {
         </div>
       `,
         };
-
         await emailTransporter.sendMail(mailOptions);
         res.json({ success: true, message: "Email sent successfully!" });
       } catch (error) {
@@ -74,239 +75,6 @@ async function run() {
           .json({ success: false, message: "Failed to send email" });
       }
     });
-
-   
-    // ----------------------------------------------Rider related api's-------------------------------------
-
-    app.post(
-      "/riders",
-      verifyFireBaseToken,
-      async (req: Request, res: Response) => {
-        const riderEmail = req.body.email;
-        const newRider = req.body;
-
-        try {
-          type RiderStatus = "pending" | "active" | "rejected";
-          const existingRider = await ridersCollection.findOne({
-            email: riderEmail,
-          });
-
-          if (existingRider) {
-            const status = existingRider.status as RiderStatus;
-
-            const messages: {
-              pending: string;
-              active: string;
-              rejected: string;
-            } = {
-              pending: "Your application is already under review. Please wait.",
-              active: "You are already an approved rider.",
-              rejected:
-                "Your previous application was rejected. Please contact support or wait before reapplying.",
-            };
-
-            const message = messages[status] || "You have already applied.";
-
-            return res.status(400).send({ message, status });
-          }
-
-          const result = await ridersCollection.insertOne(newRider);
-          res.send(result);
-        } catch (error) {
-          console.error("Error inserting rider:", error);
-          res
-            .status(500)
-            .send({ message: "Server error while submitting application." });
-        }
-      }
-    );
-
-    // GET all pending riders
-    app.get(
-      "/pending",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req: Request, res: Response) => {
-        try {
-          const pendingRiders = await ridersCollection
-            .find({
-              status: "pending",
-            })
-            .toArray();
-          res.send(pendingRiders);
-        } catch (error: any) {
-          console.error("Error fetching pending riders:", error);
-          res.status(500).send({ message: "Failed to load pending riders" });
-        }
-      }
-    );
-
-    app.delete(
-      "/riders/:id",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req: Request, res: Response) => {
-        const { id } = req.params;
-        try {
-          const result = await ridersCollection.deleteOne({
-            _id: new ObjectId(id),
-          });
-          res.send(result);
-        } catch (error) {
-          res.status(500).send({ message: "Failed to delete rider" });
-        }
-      }
-    );
-
-    app.patch(
-      "/riders/:id",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const { status, email } = req.body;
-
-        const allowedStatuses = [
-          "active",
-          "rejected",
-          "pending",
-          "in-delivery",
-        ];
-
-        if (!allowedStatuses.includes(status)) {
-          return res.status(400).send({ message: "Invalid status value" });
-        }
-
-        try {
-          // Update rider status
-          const result = await ridersCollection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { status } }
-          );
-
-          if (result.modifiedCount === 0) {
-            return res
-              .status(404)
-              .send({ message: "Rider not found or status unchanged" });
-          }
-
-          // Conditionally update user role
-          const userQuery = { email };
-          let userUpdateDoc = null;
-
-          if (status === "active") {
-            userUpdateDoc = { $set: { role: "rider" } };
-          } else if (status === "rejected" || status === "pending") {
-            userUpdateDoc = { $set: { role: "user" } };
-          }
-
-          if (userUpdateDoc) {
-            const roleResult = await usersCollection.updateOne(
-              userQuery,
-              userUpdateDoc
-            );
-            console.log("User role update result:", roleResult.modifiedCount);
-          }
-
-          res.send({
-            message: `Rider status updated to ${status}`,
-            result,
-          });
-        } catch (error) {
-          console.error("Error updating rider status:", error);
-          res.status(500).send({ message: "Failed to update rider status" });
-        }
-      }
-    );
-
-    // Cleaner and secure since verifyAdmin is already checking the role
-    app.get(
-      "/riders",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req: Request, res: Response) => {
-        const { status } = req.query as { status?: string };
-        const query: Record<string, any> = {};
-        if (status) {
-          query.status = status;
-        }
-
-        try {
-          const riders = await ridersCollection.find(query).toArray();
-          res.send(riders);
-        } catch (err) {
-          console.error("Error fetching riders", err);
-          res.status(500).send({ message: "Failed to load riders" });
-        }
-      }
-    );
-
-    // get pending delivery task for rider
-
-    app.get(
-      "/rider-parcels",
-      verifyFireBaseToken,
-      verifyRider,
-      async (req: Request, res: Response) => {
-        try {
-          const { email } = req.query;
-
-          if (!email) {
-            return res
-              .status(400)
-              .send({ message: "Rider email is required." });
-          }
-
-          const riderParcels = await parcelsCollection
-            .find({
-              assignedRiderEmail: email,
-              deliveryStatus: { $in: ["rider_assigned", "in_transit"] },
-            })
-            .sort({ createdAt: -1 }) // Newest first
-            .toArray();
-
-          res.send(riderParcels);
-        } catch (error) {
-          console.error("Failed to fetch rider parcels:", error);
-          res
-            .status(500)
-            .send({ message: "Server error while fetching parcels." });
-        }
-      }
-    );
-
-    // load completed parcel deleveries for a rider
-
-    app.get(
-      "/rider-completed-parcels",
-      verifyFireBaseToken,
-      verifyRider,
-      async (req: Request, res: Response) => {
-        try {
-          const { email } = req.query;
-          if (!email) {
-            return res.status(400).send({ message: "Rider email is required" });
-          }
-          const query = {
-            assignedRiderEmail: email,
-            deliveryStatus: { $in: ["delivered", "service_center_delivered"] },
-          };
-          const options: FindOptions = {
-            sort: { createdAt: -1 },
-          };
-
-          const completedParcels = await parcelsCollection
-            .find(query, options)
-            .toArray();
-          res.send(completedParcels);
-        } catch (error) {
-          console.error("Error loading completed parcels:", error);
-          res
-            .status(500)
-            .send({ message: "Failed to load completed deliveries" });
-        }
-      }
-    );
 
     // PATCH: Update parcel delivery status
     app.patch(

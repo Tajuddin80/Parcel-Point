@@ -114,11 +114,56 @@ const assignableParcel = async (req: Request, res: Response) => {
   }
 };
 
+const getParcelsByAssignedRiders = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).send({ message: "Rider email is required." });
+    }
+
+    const riderParcels = await parcelServices.getParcelsByAssignedRiders(
+      email as string
+    );
+    res.send(riderParcels);
+  } catch (error) {
+    console.error("Failed to fetch rider parcels:", error);
+    res.status(500).send({ message: "Server error while fetching parcels." });
+  }
+};
+
+
+ const completedParcelsByRider =
+      async (req: Request, res: Response) => {
+        try {
+          const { email } = req.query;
+          if (!email) {
+            return res.status(400).send({ message: "Rider email is required" });
+          }
+          const query = {
+            assignedRiderEmail: email,
+            deliveryStatus: { $in: ["delivered", "service_center_delivered"] },
+          };
+          const options: FindOptions = {
+            sort: { createdAt: -1 },
+          };
+
+          const completedParcels = await parcelServices.completedParcelsByRiders(query, options)
+          res.send(completedParcels);
+        } catch (error) {
+          console.error("Error loading completed parcels:", error);
+          res
+            .status(500)
+            .send({ message: "Failed to load completed deliveries" });
+        }
+      }
+
 export const parcelsController = {
   createParcel,
   getParcels,
   deleteParcel,
   getSingleParcel,
   assignParcel,
-  assignableParcel
+  assignableParcel,
+  getParcelsByAssignedRiders,completedParcelsByRider
 };

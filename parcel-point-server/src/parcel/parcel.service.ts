@@ -1,4 +1,4 @@
-import { FindOptions, ObjectId } from "mongodb";
+import { Abortable, Document, Filter, FindOptions, ObjectId } from "mongodb";
 import { parcelsCollection, ridersCollection } from "../config/db";
 import { client } from "../server";
 
@@ -92,6 +92,24 @@ const assignableParcels = async () => {
   return result;
 };
 
+const getParcelsByAssignedRiders = async (email: string) => {
+  const riderParcels = await parcelsCollection
+    .find({
+      assignedRiderEmail: email,
+      deliveryStatus: { $in: ["rider_assigned", "in_transit"] },
+    })
+    .sort({ createdAt: -1 }) // Newest first
+    .toArray();
+  return riderParcels;
+};
+
+const completedParcelsByRiders = async (query: Filter<Document>, options: (FindOptions<Document> & Abortable) | undefined) => {
+  const completedParcels = await parcelsCollection
+    .find(query, options)
+    .toArray();
+  return completedParcels;
+};
+
 export const parcelServices = {
   createParcel,
   getParcels,
@@ -99,4 +117,6 @@ export const parcelServices = {
   getSingleParcel,
   assignRider,
   assignableParcels,
+  getParcelsByAssignedRiders,
+  completedParcelsByRiders,
 };

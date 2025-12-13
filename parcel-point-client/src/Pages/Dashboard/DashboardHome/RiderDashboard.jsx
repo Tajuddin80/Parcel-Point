@@ -15,7 +15,7 @@ const RiderDashboard = () => {
    const { data = {}, isLoading } = useQuery({
     queryKey: ["riderDashboard"],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/rider/dashboard?email=${user.email}`); // ✅ No query param needed
+      const res = await axiosSecure.get(`/riders/rider/dashboard?email=${user.email}`); // ✅ No query param needed
       return res.data;
     },
     enabled: !!user?.email, // ✅ ensures user is ready before query runs
