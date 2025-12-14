@@ -151,7 +151,7 @@ const getParcelsByAssignedRiders = async (req: Request, res: Response) => {
           const completedParcels = await parcelServices.completedParcelsByRiders(query, options)
           res.send(completedParcels);
         } catch (error) {
-          console.error("Error loading completed parcels:", error);
+          console.error("Error happend while loading completed parcels:", error);
           res
             .status(500)
             .send({ message: "Failed to load completed deliveries" });
