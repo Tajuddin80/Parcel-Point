@@ -9,6 +9,7 @@ import { updateProfile } from "firebase/auth";
 import { imageUpload } from "../../../api/utils";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
 import { Helmet } from "react-helmet";
+import DemoRoleLogin from "../DemoRoleLogin/DemoRoleLogin";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,37 +53,37 @@ const Register = () => {
         return;
       }
 
-   // Create user with email & password
-const result = await createUser(data.email, data.password);
-const user = result.user;
+      // Create user with email & password
+      const result = await createUser(data.email, data.password);
+      const user = result.user;
 
-// Prepare user info
-const userInfo = {
-  email: data.email,
-  role: "user",
-  last_log_in: new Date().toISOString(),
-  created_at: new Date().toISOString(),
-};
+      // Prepare user info
+      // Prepare user info
+      const userInfo = {
+        email: data.email,
+        role: "user",
+        last_log_in: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
 
-// Send to backend
-const userRes = await axiosPublic.post("/users", userInfo);
-console.log(userRes.data);
+      // Send to backend
+      const userRes = await axiosPublic.post("/users", userInfo);
+      console.log(userRes.data);
 
-// Show success alert
-if (userRes.data.inserted || userRes.data.updated) {
-  Swal.fire({
-    icon: "success",
-    title: userRes.data.inserted
-      ? "Welcome to Parcel Point"
-      : "Welcome back!",
-    showConfirmButton: false,
-    timer: 1500,
-    timerProgressBar: true,
-    toast: true,
-    position: "center",
-  });
-}
-
+      // Show success alert
+      if (userRes.data.inserted || userRes.data.updated) {
+        Swal.fire({
+          icon: "success",
+          title: userRes.data.inserted
+            ? "Welcome to Parcel Point"
+            : "Welcome back!",
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          toast: true,
+          position: "center",
+        });
+      }
 
       // or
 
@@ -114,8 +115,8 @@ if (userRes.data.inserted || userRes.data.updated) {
     <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-8">
       <div className="w-full max-w-md">
         <Helmet>
-        <title>Parcel Point | Signup</title>
-      </Helmet>
+          <title>Parcel Point | Signup</title>
+        </Helmet>
         <h2 className="text-4xl font-bold mb-2">Create an Account</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -254,6 +255,9 @@ if (userRes.data.inserted || userRes.data.updated) {
               Login here
             </Link>
           </p>
+
+          {/* 🔁 Demo login redirects to signin */}
+          <DemoRoleLogin mode="redirect" />
 
           <button
             type="submit"

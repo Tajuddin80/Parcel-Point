@@ -72,7 +72,7 @@ A modern parcel management web app frontend built with **React 19**, **Tailwind 
 | Library / Tool | Purpose |
 |----------------|---------|
 | React 19 | Core frontend framework |
-| Tailwind CSS 4 | Utility-first styling |
+| Backend |  Node.js, Express, MongoDB, Firebase Admin SDK, Stripe, Nodemailer, dotenv, cors |
 | Vite | Build & dev server |
 | React Router v7 | Client-side routing |
 | React Query | Data fetching & caching |

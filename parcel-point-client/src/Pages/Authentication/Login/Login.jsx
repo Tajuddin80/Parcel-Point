@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import GoogleSignButton from "../GoogleSignButton/GoogleSignButton";
 import useAuth from "../../../hooks/useAuth";
 import Swal from "sweetalert2";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
 import { Helmet } from "react-helmet";
+import DemoRoleLogin from "../DemoRoleLogin/DemoRoleLogin";
 
 const Login = () => {
   const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  //  Credentials state
+  const [credentials, setCredentials] = useState({
+    email: "",
+    password: "",
+  });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -17,65 +23,63 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const email = e.target?.email.value;
-    const password = e.target?.password.value;
+    const { email, password } = credentials;
 
     signIn(email, password)
-        .then(async (result) => {
-             const user = result.user;
-     
-             // Prepare user info for backend
-             const userInfo = {
-               email: user.email,
-               role: "user",
-               last_log_in: new Date().toISOString(),
-               created_at: new Date().toISOString(),
-             };
-     
-             try {
-               const userRes = await axiosPublic.post("/users", userInfo);
-               console.log(userRes.data.message);
-     
-               let title = "Already logged in";
-               if (userRes.data.inserted) {
-                 title = "Welcome to Parcel Point";
-               } else if (userRes.data.updated) {
-                 title = "Welcome back!";
-               }
-     
-               Swal.fire({
-                 icon: "success",
-                 title,
-                 showConfirmButton: false,
-                 timer: 1500,
-                 timerProgressBar: true,
-                 toast: true,
-                 position: "center",
-               });
-     
-               // Navigate after short delay (matches toast duration)
-               setTimeout(() => {
-                 navigate(from || "/", { replace: true });
-               }, 1600); // a bit more than toast timer
-             } catch (error) {
-               console.error("Error saving user info:", error);
-               Swal.fire({
-                 icon: "error",
-                 title: "Something went wrong",
-                 text: error.message,
-               });
-             }
-           })
-           .catch((error) => {
-             console.error("Google sign-in error:", error.message);
-             Swal.fire({
-               icon: "error",
-               title: "Google Sign-in Failed",
-               text: error.message,
-             });
-           });
-  };
+      .then(async (result) => {
+        const user = result.user;
 
+        // Prepare user info for backend
+        const userInfo = {
+          email: user.email,
+          role: "user",
+          last_log_in: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        };
+
+        try {
+          const userRes = await axiosPublic.post("/users", userInfo);
+          console.log(userRes.data.message);
+
+          let title = "Already logged in";
+          if (userRes.data.inserted) {
+            title = "Welcome to Parcel Point";
+          } else if (userRes.data.updated) {
+            title = "Welcome back!";
+          }
+
+          Swal.fire({
+            icon: "success",
+            title,
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            toast: true,
+            position: "center",
+          });
+
+          // Navigate after short delay (matches toast duration)
+          setTimeout(() => {
+            navigate(from || "/", { replace: true });
+          }, 1600); // a bit more than toast timer
+        } catch (error) {
+          console.error("Error saving user info:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Something went wrong",
+            text: error.message,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Google sign-in error:", error.message);
+        Swal.fire({
+          icon: "error",
+          title: "Google Sign-in Failed",
+          text: error.message,
+        });
+      });
+  };
   return (
     <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-8">
       <Helmet>
@@ -96,6 +100,10 @@ const Login = () => {
               type="email"
               id="email"
               name="email"
+              value={credentials.email}
+              onChange={(e) =>
+                setCredentials({ ...credentials, email: e.target.value })
+              }
               placeholder="leroy@jenkins.com"
               className="w-full text-xl border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-green-400"
             />
@@ -117,6 +125,10 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
+                value={credentials.password}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, password: e.target.value })
+                }
                 placeholder="*****"
                 name="password"
                 className="w-full border text-xl border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-green-400 pr-10"
@@ -183,6 +195,7 @@ const Login = () => {
               Register here
             </Link>
           </p>
+          <DemoRoleLogin setCredentials={setCredentials} />
           <button
             type="submit"
             className="w-full bg-green-400 text-white font-semibold rounded-md py-2 hover:bg-green-500 transition"
