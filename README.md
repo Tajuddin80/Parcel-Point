@@ -25,7 +25,7 @@ It supports **user authentication (Firebase)**, **parcel booking & tracking**, *
 | Layer | Tools & Libraries |
 |-------|------------------|
 | Frontend | React 19, Tailwind CSS 4, Vite, React Router v7, React Query, React Hook Form, Stripe JS, Framer Motion, AOS, Lottie React, React Leaflet, Recharts, SweetAlert2 |
-| Backend | Node.js, Express, MongoDB, Firebase Admin SDK, Stripe, Nodemailer, dotenv, cors |
+| Backend | TypeScript, Node.js, Express, MongoDB, Firebase Admin SDK, Stripe, Nodemailer, dotenv, cors |
 
 ---
 
@@ -72,6 +72,7 @@ A modern parcel management web app frontend built with **React 19**, **Tailwind 
 | Library / Tool | Purpose |
 |----------------|---------|
 | React 19 | Core frontend framework |
+| TypeScript | For type safety |
 | Tailwind CSS 4 | Utility-first styling |
 | Vite | Build & dev server |
 | React Router v7 | Client-side routing |
