@@ -295,7 +295,7 @@ const PricingCalculator = () => {
 
         {parcelType === "Non-Document" && (
           <div>
-            <label className="block mb-1 font-semibold">Weight (KG)</label>
+            <label className="block mb-1 font-semibold">Weight(KG)</label>
             <input
               type="number"
               min="0"
